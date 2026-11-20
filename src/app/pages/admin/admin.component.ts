@@ -14,32 +14,33 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
     <div class="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col">
       <!-- Top Admin Navbar -->
       <header class="bg-black border-b border-zinc-800 sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-white text-black flex items-center justify-center font-mono font-bold text-xs">
+        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2.5 sm:gap-4">
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 bg-white text-black flex items-center justify-center font-mono font-bold text-xs shrink-0">
               AD
             </div>
-            <div>
-              <h1 class="text-sm font-bold uppercase tracking-wider leading-none text-white">
-                Panel Administrador
+            <div class="min-w-0">
+              <h1 class="text-xs sm:text-sm font-bold uppercase tracking-wider leading-none text-white truncate">
+                Panel Admin
               </h1>
-              <p class="text-[11px] font-mono text-zinc-500 mt-1">
+              <p class="text-[10px] sm:text-[11px] font-mono text-zinc-500 mt-1 truncate">
                 {{ authService.currentUser()?.email || 'Administrador' }}
               </p>
             </div>
           </div>
 
-          <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <a
               routerLink="/"
-              class="px-3.5 py-2 border border-zinc-800 hover:border-white text-zinc-300 hover:text-white text-[11px] font-mono uppercase tracking-wider transition-colors"
+              class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-zinc-800 hover:border-white text-zinc-300 hover:text-white text-[10px] sm:text-[11px] font-mono uppercase tracking-wider transition-colors"
             >
-              Ver Catálogo ↗
+              <span class="sm:hidden">Catálogo ↗</span>
+              <span class="hidden sm:inline">Ver Catálogo ↗</span>
             </a>
             <button
               type="button"
               (click)="authService.logout()"
-              class="px-3.5 py-2 border border-zinc-800 hover:bg-white hover:text-black text-zinc-400 text-[11px] font-mono uppercase tracking-wider transition-colors"
+              class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-zinc-800 hover:bg-white hover:text-black text-zinc-400 text-[10px] sm:text-[11px] font-mono uppercase tracking-wider transition-colors"
             >
               Salir
             </button>
@@ -169,8 +170,79 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
             </select>
           </div>
 
-          <!-- Products Table -->
-          <div class="overflow-x-auto">
+          <!-- Mobile Products Cards (shown on small screens instead of cramped table) -->
+          <div class="md:hidden divide-y divide-zinc-800/80">
+            <div *ngFor="let prod of productosAdminFiltrados()" class="p-4 space-y-3">
+              <div class="flex items-start gap-3">
+                <img
+                  [src]="prod.imagen_url || defaultImage"
+                  (error)="onImageError($event)"
+                  [alt]="prod.nombre"
+                  class="w-16 h-16 object-cover bg-zinc-950 border border-zinc-800 shrink-0"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="text-[10px] font-mono uppercase text-zinc-500 truncate">
+                    {{ prod.categoria_nombre || 'Sin categoría' }}
+                    <span *ngIf="prod.codigo"> · {{ prod.codigo }}</span>
+                  </div>
+                  <div class="font-bold text-white text-sm leading-snug mt-0.5">{{ prod.nombre }}</div>
+                  <div class="flex items-baseline gap-2 mt-1 font-mono">
+                    <span class="font-bold text-white text-sm">{{ formatPrice(prod.precio) }}</span>
+                    <span *ngIf="prod.precio_anterior && prod.precio_anterior > prod.precio" class="text-[11px] text-zinc-500 line-through">
+                      {{ formatPrice(prod.precio_anterior) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-zinc-900">
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    (click)="toggleDestacado(prod)"
+                    [class]="prod.destacado
+                      ? 'px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase bg-white text-black'
+                      : 'px-2.5 py-1.5 text-[10px] font-mono uppercase border border-zinc-800 text-zinc-500'"
+                  >
+                    {{ prod.destacado ? '★ Top' : 'Top' }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="toggleDisponible(prod)"
+                    [class]="prod.disponible
+                      ? 'px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase border border-white text-white'
+                      : 'px-2.5 py-1.5 text-[10px] font-mono uppercase border border-zinc-800 text-zinc-600'"
+                  >
+                    {{ prod.disponible ? 'Visible' : 'Oculto' }}
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-1.5 font-mono">
+                  <button
+                    type="button"
+                    (click)="abrirModalProducto(prod)"
+                    class="px-3 py-1.5 border border-zinc-700 text-zinc-200 text-[10px] uppercase"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="eliminarProducto(prod)"
+                    class="px-3 py-1.5 border border-zinc-800 text-zinc-400 text-[10px] uppercase"
+                  >
+                    Borrar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="productosAdminFiltrados().length === 0" class="py-10 text-center font-mono text-xs uppercase text-zinc-500">
+              No hay productos que coincidan con la búsqueda.
+            </div>
+          </div>
+
+          <!-- Desktop Products Table -->
+          <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="border-b border-zinc-800 text-[10px] font-mono uppercase tracking-widest text-zinc-500 bg-black/50">
