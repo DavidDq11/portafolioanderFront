@@ -156,7 +156,7 @@ import { environment } from '../../../environments/environment';
         </div>
       </header>
 
-      <!-- HERO: Mobile-Optimized Drop Intro + Spotlight -->
+      <!-- HERO: Mobile-Optimized Drop Intro + Showcase -->
       <section class="relative border-b border-zinc-800/90 bg-grid-subtle overflow-hidden">
         <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
@@ -196,44 +196,22 @@ import { environment } from '../../../environments/environment';
                   <span aria-hidden="true">↗</span>
                 </a>
               </div>
-
-              <!-- Compact Metrics Strip -->
-              <div class="mt-5 sm:mt-8 pt-4 sm:pt-6 border-t border-zinc-800/80 grid grid-cols-3 gap-3 max-w-md font-mono">
-                <div>
-                  <span class="block text-xl sm:text-3xl font-bold text-white leading-none">
-                    {{ padZero(categoriasActivas().length) }}
-                  </span>
-                  <span class="block text-[9px] sm:text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Categorías</span>
-                </div>
-                <div>
-                  <span class="block text-xl sm:text-3xl font-bold text-white leading-none">
-                    {{ padZero(productosDisponiblesCount()) }}
-                  </span>
-                  <span class="block text-[9px] sm:text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Disponibles</span>
-                </div>
-                <div>
-                  <span class="block text-xl sm:text-3xl font-bold text-white leading-none">
-                    {{ padZero(ofertasCount()) }}
-                  </span>
-                  <span class="block text-[9px] sm:text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Ofertas</span>
-                </div>
-              </div>
             </div>
 
-            <!-- Right: Featured Drop Spotlight (Compact on Mobile) -->
+            <!-- Right: Showcase Card -->
             <div class="lg:col-span-5" *ngIf="spotlightProducto() as spot">
               <div class="bg-[#0c0c0f] border border-zinc-800 group">
-                <!-- Spotlight Top Bar -->
+                <!-- Showcase Top Bar -->
                 <div class="px-3.5 py-2 border-b border-zinc-800 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.18em]">
                   <span class="text-white font-bold">
-                    "DESTACADO" // {{ padZero(spotlightIndex() + 1) }}/{{ padZero(featuredList().length) }}
+                    EN VITRINA // {{ padZero(spotlightIndex() + 1) }}/{{ padZero(spotlightList().length) }}
                   </span>
-                  <div class="flex items-center gap-1.5" *ngIf="featuredList().length > 1">
+                  <div class="flex items-center gap-1.5" *ngIf="spotlightList().length > 1">
                     <button
                       type="button"
                       (click)="prevSpotlight()"
                       class="w-8 h-8 sm:w-7 sm:h-7 border border-zinc-800 hover:border-white active:bg-white active:text-black text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
-                      aria-label="Producto destacado anterior"
+                      aria-label="Producto anterior"
                     >
                       ←
                     </button>
@@ -241,14 +219,14 @@ import { environment } from '../../../environments/environment';
                       type="button"
                       (click)="nextSpotlight()"
                       class="w-8 h-8 sm:w-7 sm:h-7 border border-zinc-800 hover:border-white active:bg-white active:text-black text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
-                      aria-label="Siguiente producto destacado"
+                      aria-label="Siguiente producto"
                     >
                       →
                     </button>
                   </div>
                 </div>
 
-                <!-- Spotlight Visual -->
+                <!-- Showcase Visual -->
                 <div
                   class="relative aspect-[16/10] sm:aspect-[16/11] lg:aspect-[4/3] bg-black overflow-hidden cursor-pointer"
                   (click)="selectedProducto.set(spot)"
@@ -260,13 +238,6 @@ import { environment } from '../../../environments/environment';
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
-
-                  <span
-                    *ngIf="getDiscountPercent(spot) > 0"
-                    class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-white text-black font-mono text-[10px] font-bold uppercase tracking-wider"
-                  >
-                    -{{ getDiscountPercent(spot) }}% OFF
-                  </span>
 
                   <span
                     *ngIf="spot.codigo"
@@ -285,19 +256,11 @@ import { environment } from '../../../environments/environment';
                   </div>
                 </div>
 
-                <!-- Spotlight Footer Action -->
+                <!-- Showcase Footer Action -->
                 <div class="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 bg-[#0c0c0f]">
-                  <div class="min-w-0">
-                    <span
-                      *ngIf="spot.precio_anterior && spot.precio_anterior > spot.precio"
-                      class="block text-[10px] sm:text-[11px] font-mono text-zinc-500 line-through"
-                    >
-                      {{ formatPrice(spot.precio_anterior) }}
-                    </span>
-                    <span class="text-lg sm:text-xl font-mono font-bold text-white">
-                      {{ formatPrice(spot.precio) }}
-                    </span>
-                  </div>
+                  <span class="text-lg sm:text-xl font-mono font-bold text-white">
+                    {{ formatPrice(spot.precio) }}
+                  </span>
 
                   <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <button
@@ -404,8 +367,8 @@ import { environment } from '../../../environments/environment';
 
       <!-- MAIN PRODUCTS CATALOG -->
       <main id="catalogo" class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-7 sm:py-10 scroll-mt-14 sm:scroll-mt-20">
-        <!-- Active Category Heading + Desktop Controls -->
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 sm:pb-6 border-b border-zinc-800/90">
+        <!-- Active Category Heading + Sort -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 sm:pb-6 border-b border-zinc-800/90">
           <div>
             <span class="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-500">
               02 // Vitrinas &amp; Piezas Disponibles
@@ -418,39 +381,16 @@ import { environment } from '../../../environments/environment';
             </p>
           </div>
 
-          <!-- Filter Toggles & Sort -->
-          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
-            <button
-              type="button"
-              (click)="onlyFeatured.set(!onlyFeatured())"
-              [class]="onlyFeatured()
-                ? 'px-3 py-2 text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider bg-white text-black border border-white transition-colors whitespace-nowrap shrink-0'
-                : 'px-3 py-2 text-[10px] sm:text-[11px] font-mono uppercase tracking-wider bg-[#0c0c0f] text-zinc-300 border border-zinc-800 hover:border-white transition-colors whitespace-nowrap shrink-0'"
-            >
-              Destacados
-            </button>
-
-            <button
-              type="button"
-              (click)="onlyDeals.set(!onlyDeals())"
-              [class]="onlyDeals()
-                ? 'px-3 py-2 text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider bg-white text-black border border-white transition-colors whitespace-nowrap shrink-0'
-                : 'px-3 py-2 text-[10px] sm:text-[11px] font-mono uppercase tracking-wider bg-[#0c0c0f] text-zinc-300 border border-zinc-800 hover:border-white transition-colors whitespace-nowrap shrink-0'"
-            >
-              Ofertas
-            </button>
-
-            <select
-              [ngModel]="sortBy()"
-              (ngModelChange)="sortBy.set($event)"
-              class="px-3 py-2 text-[10px] sm:text-[11px] font-mono uppercase tracking-wider bg-[#0c0c0f] text-zinc-200 border border-zinc-800 focus:border-white outline-none cursor-pointer shrink-0"
-            >
-              <option value="featured">Orden: Destacados</option>
-              <option value="price-asc">Precio: Menor a Mayor</option>
-              <option value="price-desc">Precio: Mayor a Menor</option>
-              <option value="name-asc">Nombre: A - Z</option>
-            </select>
-          </div>
+          <select
+            [ngModel]="sortBy()"
+            (ngModelChange)="sortBy.set($event)"
+            class="w-full sm:w-auto px-3.5 py-2.5 text-[10px] sm:text-[11px] font-mono uppercase tracking-wider bg-[#0c0c0f] text-zinc-200 border border-zinc-800 focus:border-white outline-none cursor-pointer shrink-0"
+          >
+            <option value="recent">Orden: Más recientes</option>
+            <option value="price-asc">Precio: Menor a Mayor</option>
+            <option value="price-desc">Precio: Mayor a Menor</option>
+            <option value="name-asc">Nombre: A - Z</option>
+          </select>
         </div>
 
         <!-- Quick Category Chips + Counter + Mobile Grid Toggle -->
@@ -591,23 +531,7 @@ import { environment } from '../../../environments/environment';
 
               <div class="absolute inset-x-0 bottom-0 h-16 sm:h-24 bg-gradient-to-t from-black/80 via-black/15 to-transparent pointer-events-none"></div>
 
-              <!-- Top-Left Stamps -->
-              <div class="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col items-start gap-1">
-                <span
-                  *ngIf="getDiscountPercent(prod) > 0"
-                  class="px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider bg-white text-black"
-                >
-                  -{{ getDiscountPercent(prod) }}%
-                </span>
-                <span
-                  *ngIf="prod.destacado"
-                  class="px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-mono uppercase tracking-wider bg-black/90 text-white border border-white/40"
-                >
-                  TOP DROP
-                </span>
-              </div>
-
-              <!-- Top-Right SKU (hidden in ultra-compact 2-col mobile to keep photo clean) -->
+              <!-- Top-Right SKU -->
               <span
                 *ngIf="prod.codigo"
                 [class]="mobileCols() === 2
@@ -625,21 +549,15 @@ import { environment } from '../../../environments/environment';
               </div>
             </div>
 
-            <!-- Card Body (Adapts cleanly to 2-col mobile vs 1-col/desktop) -->
+            <!-- Card Body -->
             <div
               [class]="mobileCols() === 2
                 ? 'p-2.5 sm:p-5 flex-1 flex flex-col justify-between'
                 : 'p-4 sm:p-5 flex-1 flex flex-col justify-between'"
             >
               <div>
-                <div class="flex items-center justify-between gap-1.5 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.14em] sm:tracking-[0.2em] text-zinc-500 mb-1">
-                  <span class="truncate">{{ prod.categoria_nombre || 'General' }}</span>
-                  <span
-                    *ngIf="getSavingsAmount(prod) > 0"
-                    [class]="mobileCols() === 2 ? 'hidden sm:inline text-white shrink-0' : 'text-white shrink-0'"
-                  >
-                    -{{ formatPrice(getSavingsAmount(prod)) }}
-                  </span>
+                <div class="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.14em] sm:tracking-[0.2em] text-zinc-500 mb-1 truncate">
+                  {{ prod.categoria_nombre || 'General' }}
                 </div>
 
                 <h3
@@ -675,27 +593,19 @@ import { environment } from '../../../environments/environment';
                 </div>
               </div>
 
-              <!-- Price & Conversion Action (Stacked in 2-col mobile for zero squishing) -->
+              <!-- Single Price & Direct Action -->
               <div
                 [class]="mobileCols() === 2
-                  ? 'mt-3 sm:mt-5 pt-2.5 sm:pt-4 border-t border-zinc-800/90 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-3'
-                  : 'mt-4 sm:mt-5 pt-3.5 sm:pt-4 border-t border-zinc-800/90 flex items-end justify-between gap-3'"
+                  ? 'mt-3 sm:mt-5 pt-2.5 sm:pt-4 border-t border-zinc-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3'
+                  : 'mt-4 sm:mt-5 pt-3.5 sm:pt-4 border-t border-zinc-800/90 flex items-center justify-between gap-3'"
               >
-                <div class="min-w-0">
-                  <span
-                    *ngIf="prod.precio_anterior && prod.precio_anterior > prod.precio"
-                    class="block text-[10px] sm:text-[11px] font-mono text-zinc-500 line-through leading-tight"
-                  >
-                    {{ formatPrice(prod.precio_anterior) }}
-                  </span>
-                  <span
-                    [class]="mobileCols() === 2
-                      ? 'block text-sm sm:text-xl font-mono font-bold text-white tracking-tight leading-tight'
-                      : 'block text-xl font-mono font-bold text-white tracking-tight leading-none'"
-                  >
-                    {{ formatPrice(prod.precio) }}
-                  </span>
-                </div>
+                <span
+                  [class]="mobileCols() === 2
+                    ? 'block text-sm sm:text-xl font-mono font-bold text-white tracking-tight leading-tight'
+                    : 'block text-xl font-mono font-bold text-white tracking-tight leading-none'"
+                >
+                  {{ formatPrice(prod.precio) }}
+                </span>
 
                 <a
                   [href]="getProductWhatsappUrl(prod)"
@@ -749,7 +659,7 @@ import { environment } from '../../../environments/environment';
           class="bg-[#0c0c0f] w-full sm:max-w-4xl max-h-[92dvh] flex flex-col md:grid md:grid-cols-2 border-t sm:border border-zinc-700 overflow-hidden"
           (click)="$event.stopPropagation()"
         >
-          <!-- Scrollable Content Area on Mobile (splits cleanly into 2 cols on md+) -->
+          <!-- Scrollable Content Area on Mobile -->
           <div class="overflow-y-auto md:overflow-visible flex-1 md:contents">
             <!-- Product Image -->
             <div class="relative aspect-[4/3] sm:aspect-square md:aspect-auto bg-black border-b md:border-b-0 md:border-r border-zinc-800 shrink-0">
@@ -769,21 +679,6 @@ import { environment } from '../../../environments/environment';
               >
                 ✕
               </button>
-
-              <div class="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col items-start gap-1.5">
-                <span
-                  *ngIf="getDiscountPercent(prod) > 0"
-                  class="px-2.5 py-1 text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-widest bg-white text-black"
-                >
-                  -{{ getDiscountPercent(prod) }}% OFF
-                </span>
-                <span
-                  *ngIf="prod.destacado"
-                  class="px-2.5 py-1 text-[9px] sm:text-[10px] font-mono uppercase tracking-widest bg-black/85 text-white border border-white/40"
-                >
-                  "TOP DROP"
-                </span>
-              </div>
             </div>
 
             <!-- Product Info -->
@@ -811,23 +706,9 @@ import { environment } from '../../../environments/environment';
                   REF // {{ prod.codigo }}
                 </p>
 
-                <div class="mt-4 p-3.5 sm:p-4 bg-black border border-zinc-800 flex flex-wrap items-baseline justify-between gap-2">
-                  <div class="flex items-baseline gap-2.5">
-                    <span class="text-2xl sm:text-3xl font-mono font-bold text-white">
-                      {{ formatPrice(prod.precio) }}
-                    </span>
-                    <span
-                      *ngIf="prod.precio_anterior && prod.precio_anterior > prod.precio"
-                      class="text-xs sm:text-sm font-mono text-zinc-500 line-through"
-                    >
-                      {{ formatPrice(prod.precio_anterior) }}
-                    </span>
-                  </div>
-                  <span
-                    *ngIf="getSavingsAmount(prod) > 0"
-                    class="text-[10px] font-mono font-bold uppercase px-2 py-0.5 bg-white text-black"
-                  >
-                    AHORRAS {{ formatPrice(getSavingsAmount(prod)) }}
+                <div class="mt-4 p-3.5 sm:p-4 bg-black border border-zinc-800">
+                  <span class="text-2xl sm:text-3xl font-mono font-bold text-white">
+                    {{ formatPrice(prod.precio) }}
                   </span>
                 </div>
 
@@ -923,9 +804,7 @@ export class CatalogoComponent implements OnInit {
 
   searchTerm = signal<string>('');
   selectedCategoryId = signal<number | null>(null);
-  onlyFeatured = signal<boolean>(false);
-  onlyDeals = signal<boolean>(false);
-  sortBy = signal<'featured' | 'price-asc' | 'price-desc' | 'name-asc'>('featured');
+  sortBy = signal<'recent' | 'price-asc' | 'price-desc' | 'name-asc'>('recent');
 
   mobileSearchOpen = signal<boolean>(false);
   mobileCols = signal<1 | 2>(2);
@@ -945,21 +824,10 @@ export class CatalogoComponent implements OnInit {
     () => this.productosDisponibles().length
   );
 
-  readonly ofertasCount = computed(
-    () =>
-      this.productosDisponibles().filter(
-        (p) => p.precio_anterior && Number(p.precio_anterior) > Number(p.precio)
-      ).length
-  );
-
-  readonly featuredList = computed(() => {
-    const disponibles = this.productosDisponibles();
-    const destacados = disponibles.filter((p) => !!p.destacado);
-    return destacados.length > 0 ? destacados : disponibles.slice(0, 4);
-  });
+  readonly spotlightList = computed(() => this.productosDisponibles().slice(0, 6));
 
   readonly spotlightProducto = computed(() => {
-    const list = this.featuredList();
+    const list = this.spotlightList();
     if (list.length === 0) return null;
     const idx = this.spotlightIndex() % list.length;
     return list[idx < 0 ? idx + list.length : idx];
@@ -982,24 +850,12 @@ export class CatalogoComponent implements OnInit {
   readonly productosFiltrados = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
     const catId = this.selectedCategoryId();
-    const featured = this.onlyFeatured();
-    const deals = this.onlyDeals();
     const sort = this.sortBy();
 
     let list = this.productosDisponibles();
 
     if (catId !== null) {
       list = list.filter((p) => Number(p.categoria_id) === Number(catId));
-    }
-
-    if (featured) {
-      list = list.filter((p) => !!p.destacado);
-    }
-
-    if (deals) {
-      list = list.filter(
-        (p) => p.precio_anterior && Number(p.precio_anterior) > Number(p.precio)
-      );
     }
 
     if (term) {
@@ -1017,7 +873,6 @@ export class CatalogoComponent implements OnInit {
       if (sort === 'price-asc') return Number(a.precio) - Number(b.precio);
       if (sort === 'price-desc') return Number(b.precio) - Number(a.precio);
       if (sort === 'name-asc') return a.nombre.localeCompare(b.nombre);
-      if (a.destacado !== b.destacado) return a.destacado ? -1 : 1;
       return b.id - a.id;
     });
   });
@@ -1044,13 +899,13 @@ export class CatalogoComponent implements OnInit {
   }
 
   nextSpotlight(): void {
-    const len = this.featuredList().length;
+    const len = this.spotlightList().length;
     if (len <= 1) return;
     this.spotlightIndex.set((this.spotlightIndex() + 1) % len);
   }
 
   prevSpotlight(): void {
-    const len = this.featuredList().length;
+    const len = this.spotlightList().length;
     if (len <= 1) return;
     this.spotlightIndex.set((this.spotlightIndex() - 1 + len) % len);
   }
@@ -1093,35 +948,14 @@ export class CatalogoComponent implements OnInit {
   }
 
   hasActiveFilters(): boolean {
-    return (
-      !!this.searchTerm() ||
-      this.selectedCategoryId() !== null ||
-      this.onlyFeatured() ||
-      this.onlyDeals()
-    );
+    return !!this.searchTerm() || this.selectedCategoryId() !== null;
   }
 
   resetFilters(): void {
     this.searchTerm.set('');
     this.mobileSearchOpen.set(false);
     this.selectedCategoryId.set(null);
-    this.onlyFeatured.set(false);
-    this.onlyDeals.set(false);
-    this.sortBy.set('featured');
-  }
-
-  getDiscountPercent(prod: Producto): number {
-    const prev = Number(prod.precio_anterior || 0);
-    const curr = Number(prod.precio || 0);
-    if (!prev || prev <= curr) return 0;
-    return Math.round(((prev - curr) / prev) * 100);
-  }
-
-  getSavingsAmount(prod: Producto): number {
-    const prev = Number(prod.precio_anterior || 0);
-    const curr = Number(prod.precio || 0);
-    if (!prev || prev <= curr) return 0;
-    return prev - curr;
+    this.sortBy.set('recent');
   }
 
   getTagsList(etiquetas?: string): string[] {

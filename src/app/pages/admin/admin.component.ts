@@ -49,7 +49,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-8">
         <!-- Offline warning if backend is not running -->
         <div
           *ngIf="catalogService.isOfflineDemo()"
@@ -78,34 +78,30 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
         </div>
 
         <!-- KPI Stats Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div class="bg-[#111113] p-5 border border-zinc-800">
-            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Total Productos</span>
-            <p class="text-3xl font-mono font-bold text-white mt-2">{{ productos().length }}</p>
+        <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div class="bg-[#111113] p-4 sm:p-5 border border-zinc-800">
+            <span class="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-zinc-500">Productos</span>
+            <p class="text-2xl sm:text-3xl font-mono font-bold text-white mt-1.5">{{ productos().length }}</p>
           </div>
-          <div class="bg-[#111113] p-5 border border-zinc-800">
-            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Visibles</span>
-            <p class="text-3xl font-mono font-bold text-white mt-2">{{ totalDisponibles() }}</p>
+          <div class="bg-[#111113] p-4 sm:p-5 border border-zinc-800">
+            <span class="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-zinc-500">Visibles</span>
+            <p class="text-2xl sm:text-3xl font-mono font-bold text-white mt-1.5">{{ totalDisponibles() }}</p>
           </div>
-          <div class="bg-[#111113] p-5 border border-zinc-800">
-            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Destacados</span>
-            <p class="text-3xl font-mono font-bold text-white mt-2">{{ totalDestacados() }}</p>
-          </div>
-          <div class="bg-[#111113] p-5 border border-zinc-800">
-            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Categorías</span>
-            <p class="text-3xl font-mono font-bold text-white mt-2">{{ categorias().length }}</p>
+          <div class="bg-[#111113] p-4 sm:p-5 border border-zinc-800">
+            <span class="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-zinc-500">Categorías</span>
+            <p class="text-2xl sm:text-3xl font-mono font-bold text-white mt-1.5">{{ categorias().length }}</p>
           </div>
         </div>
 
         <!-- Tabs & Primary Action -->
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6">
           <div class="inline-flex border border-zinc-800 bg-black">
             <button
               type="button"
               (click)="activeTab.set('productos')"
               [class]="activeTab() === 'productos'
-                ? 'px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider bg-white text-black transition-colors'
-                : 'px-5 py-2.5 text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-white transition-colors'"
+                ? 'px-4 sm:px-5 py-2.5 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider bg-white text-black transition-colors'
+                : 'px-4 sm:px-5 py-2.5 text-[11px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-white transition-colors'"
             >
               Productos [{{ productos().length }}]
             </button>
@@ -113,8 +109,8 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
               type="button"
               (click)="activeTab.set('categorias')"
               [class]="activeTab() === 'categorias'
-                ? 'px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider bg-white text-black transition-colors'
-                : 'px-5 py-2.5 text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-white transition-colors'"
+                ? 'px-4 sm:px-5 py-2.5 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider bg-white text-black transition-colors'
+                : 'px-4 sm:px-5 py-2.5 text-[11px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-white transition-colors'"
             >
               Categorías [{{ categorias().length }}]
             </button>
@@ -125,7 +121,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
               *ngIf="activeTab() === 'productos'"
               type="button"
               (click)="abrirModalProducto()"
-              class="px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-xs font-mono font-bold uppercase tracking-wider transition-colors"
+              class="px-4 sm:px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors"
             >
               + Nuevo Producto
             </button>
@@ -133,7 +129,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
               *ngIf="activeTab() === 'categorias'"
               type="button"
               (click)="abrirModalCategoria()"
-              class="px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-xs font-mono font-bold uppercase tracking-wider transition-colors"
+              class="px-4 sm:px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors"
             >
               + Nueva Categoría
             </button>
@@ -170,7 +166,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
             </select>
           </div>
 
-          <!-- Mobile Products Cards (shown on small screens instead of cramped table) -->
+          <!-- Mobile Products Cards -->
           <div class="md:hidden divide-y divide-zinc-800/80">
             <div *ngFor="let prod of productosAdminFiltrados()" class="p-4 space-y-3">
               <div class="flex items-start gap-3">
@@ -186,36 +182,22 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
                     <span *ngIf="prod.codigo"> · {{ prod.codigo }}</span>
                   </div>
                   <div class="font-bold text-white text-sm leading-snug mt-0.5">{{ prod.nombre }}</div>
-                  <div class="flex items-baseline gap-2 mt-1 font-mono">
-                    <span class="font-bold text-white text-sm">{{ formatPrice(prod.precio) }}</span>
-                    <span *ngIf="prod.precio_anterior && prod.precio_anterior > prod.precio" class="text-[11px] text-zinc-500 line-through">
-                      {{ formatPrice(prod.precio_anterior) }}
-                    </span>
+                  <div class="mt-1 font-mono font-bold text-white text-sm">
+                    {{ formatPrice(prod.precio) }}
                   </div>
                 </div>
               </div>
 
               <div class="flex items-center justify-between gap-2 pt-2 border-t border-zinc-900">
-                <div class="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    (click)="toggleDestacado(prod)"
-                    [class]="prod.destacado
-                      ? 'px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase bg-white text-black'
-                      : 'px-2.5 py-1.5 text-[10px] font-mono uppercase border border-zinc-800 text-zinc-500'"
-                  >
-                    {{ prod.destacado ? '★ Top' : 'Top' }}
-                  </button>
-                  <button
-                    type="button"
-                    (click)="toggleDisponible(prod)"
-                    [class]="prod.disponible
-                      ? 'px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase border border-white text-white'
-                      : 'px-2.5 py-1.5 text-[10px] font-mono uppercase border border-zinc-800 text-zinc-600'"
-                  >
-                    {{ prod.disponible ? 'Visible' : 'Oculto' }}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  (click)="toggleDisponible(prod)"
+                  [class]="prod.disponible
+                    ? 'px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase border border-white text-white'
+                    : 'px-2.5 py-1.5 text-[10px] font-mono uppercase border border-zinc-800 text-zinc-600'"
+                >
+                  {{ prod.disponible ? 'Visible' : 'Oculto' }}
+                </button>
 
                 <div class="flex items-center gap-1.5 font-mono">
                   <button
@@ -249,7 +231,6 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
                   <th class="py-3.5 px-4">Producto</th>
                   <th class="py-3.5 px-4">Categoría</th>
                   <th class="py-3.5 px-4">Precio</th>
-                  <th class="py-3.5 px-4 text-center">Destacado</th>
                   <th class="py-3.5 px-4 text-center">Visible</th>
                   <th class="py-3.5 px-4 text-right">Acciones</th>
                 </tr>
@@ -285,24 +266,6 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
 
                   <td class="py-3.5 px-4 font-mono">
                     <div class="font-bold text-white">{{ formatPrice(prod.precio) }}</div>
-                    <div
-                      *ngIf="prod.precio_anterior && prod.precio_anterior > prod.precio"
-                      class="text-xs text-zinc-500 line-through"
-                    >
-                      {{ formatPrice(prod.precio_anterior) }}
-                    </div>
-                  </td>
-
-                  <td class="py-3.5 px-4 text-center">
-                    <button
-                      type="button"
-                      (click)="toggleDestacado(prod)"
-                      [class]="prod.destacado
-                        ? 'px-2.5 py-1 text-[10px] font-mono font-bold uppercase bg-white text-black'
-                        : 'px-2.5 py-1 text-[10px] font-mono uppercase border border-zinc-800 text-zinc-500 hover:text-white'"
-                    >
-                      {{ prod.destacado ? 'Sí' : 'No' }}
-                    </button>
                   </td>
 
                   <td class="py-3.5 px-4 text-center">
@@ -336,7 +299,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
                 </tr>
 
                 <tr *ngIf="productosAdminFiltrados().length === 0">
-                  <td colspan="6" class="py-12 text-center font-mono text-xs uppercase text-zinc-500">
+                  <td colspan="5" class="py-12 text-center font-mono text-xs uppercase text-zinc-500">
                     No hay productos que coincidan con la búsqueda.
                   </td>
                 </tr>
@@ -396,7 +359,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
         *ngIf="showProductoModal()"
         class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
       >
-        <div class="bg-[#111113] max-w-2xl w-full p-6 sm:p-8 border border-zinc-800 my-8 max-h-[92vh] overflow-y-auto">
+        <div class="bg-[#111113] max-w-2xl w-full p-5 sm:p-8 border border-zinc-800 my-8 max-h-[92vh] overflow-y-auto">
           <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
             <h2 class="text-lg font-bold uppercase tracking-wider text-white">
               {{ editingProductoId() ? 'Editar Producto' : 'Nuevo Producto' }}
@@ -436,7 +399,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Categoría *</label>
                 <select
@@ -452,7 +415,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
               </div>
 
               <div>
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Precio Venta *</label>
+                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Precio *</label>
                 <input
                   type="number"
                   name="precio"
@@ -460,18 +423,6 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
                   required
                   min="0"
                   placeholder="65000"
-                  class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Precio Anterior</label>
-                <input
-                  type="number"
-                  name="precio_anterior"
-                  [(ngModel)]="prodForm.precio_anterior"
-                  min="0"
-                  placeholder="Opcional: 85000"
                   class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
                 />
               </div>
@@ -530,7 +481,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
               ></textarea>
             </div>
 
-            <div class="flex flex-wrap items-center gap-6 pt-2">
+            <div class="pt-2">
               <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-mono uppercase text-zinc-300">
                 <input
                   type="checkbox"
@@ -538,17 +489,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
                   [(ngModel)]="prodForm.disponible"
                   class="w-4 h-4 accent-white"
                 />
-                <span>Disponible (Visible)</span>
-              </label>
-
-              <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-mono uppercase text-zinc-300">
-                <input
-                  type="checkbox"
-                  name="destacado"
-                  [(ngModel)]="prodForm.destacado"
-                  class="w-4 h-4 accent-white"
-                />
-                <span>Destacado</span>
+                <span>Disponible (Visible en el catálogo)</span>
               </label>
             </div>
 
@@ -577,7 +518,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
         *ngIf="showCategoriaModal()"
         class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
       >
-        <div class="bg-[#111113] max-w-md w-full p-6 sm:p-8 border border-zinc-800">
+        <div class="bg-[#111113] max-w-md w-full p-5 sm:p-8 border border-zinc-800">
           <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
             <h2 class="text-lg font-bold uppercase tracking-wider text-white">
               {{ editingCategoriaId() ? 'Editar Categoría' : 'Nueva Categoría' }}
@@ -616,7 +557,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
                   <option value="tv">Electrodomésticos</option>
                   <option value="headphones">Tecnología / Audio</option>
                   <option value="home">Hogar</option>
-                  <option value="sparkles">Destacados / Otros</option>
+                  <option value="sparkles">Otros</option>
                   <option value="tag">General</option>
                 </select>
               </div>
@@ -705,10 +646,6 @@ export class AdminComponent implements OnInit {
     () => this.productos().filter((p) => p.disponible !== false).length
   );
 
-  readonly totalDestacados = computed(
-    () => this.productos().filter((p) => !!p.destacado).length
-  );
-
   readonly productosAdminFiltrados = computed(() => {
     const term = this.searchProducto().trim().toLowerCase();
     const catId = this.filterCategoriaId();
@@ -754,7 +691,7 @@ export class AdminComponent implements OnInit {
   abrirModalProducto(prod?: Producto): void {
     if (prod) {
       this.editingProductoId.set(prod.id);
-      this.prodForm = { ...prod };
+      this.prodForm = { ...prod, precio_anterior: null, destacado: false };
     } else {
       this.editingProductoId.set(null);
       this.prodForm = this.getEmptyProductoForm();
@@ -766,10 +703,16 @@ export class AdminComponent implements OnInit {
     if (!this.prodForm.nombre) return;
     this.saving.set(true);
 
+    const payload: Partial<Producto> = {
+      ...this.prodForm,
+      precio_anterior: null,
+      destacado: false,
+    };
+
     const id = this.editingProductoId();
     const req$ = id
-      ? this.catalogService.actualizarProducto(id, this.prodForm)
-      : this.catalogService.crearProducto(this.prodForm);
+      ? this.catalogService.actualizarProducto(id, payload)
+      : this.catalogService.crearProducto(payload);
 
     req$.subscribe({
       next: () => {
@@ -785,15 +728,8 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  toggleDestacado(prod: Producto): void {
-    const actualizado = { ...prod, destacado: !prod.destacado };
-    this.catalogService.actualizarProducto(prod.id, actualizado).subscribe({
-      next: () => this.cargarDatos(),
-    });
-  }
-
   toggleDisponible(prod: Producto): void {
-    const actualizado = { ...prod, disponible: !prod.disponible };
+    const actualizado = { ...prod, disponible: !prod.disponible, precio_anterior: null, destacado: false };
     this.catalogService.actualizarProducto(prod.id, actualizado).subscribe({
       next: () => this.cargarDatos(),
     });
