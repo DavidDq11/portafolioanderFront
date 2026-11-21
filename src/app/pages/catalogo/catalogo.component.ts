@@ -169,7 +169,7 @@ import { environment } from '../../../environments/environment';
               </div>
 
               <h2 class="font-display text-[2.65rem] sm:text-7xl lg:text-[5.25rem] uppercase tracking-wide text-white leading-[0.92]">
-                PEPAS, CHORRO, PERICO, BARETA.<br />
+                NO ES UN CATÁLOGO MÁS.<br />
                 <span class="text-zinc-500">ES TU PRÓXIMO DROP.</span>
               </h2>
 
