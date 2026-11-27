@@ -31,11 +31,23 @@ export interface Producto {
   precio: number;
   precio_anterior?: number | null;
   imagen_url?: string;
+  imagenes?: string[];
   etiquetas?: string;
   destacado: boolean;
   disponible: boolean;
   creado_en?: string;
   actualizado_en?: string;
+}
+
+export interface BulkProductosPayload {
+  categoria_id: number | null;
+  productos: Partial<Producto>[];
+}
+
+export interface BulkProductosResponse {
+  creados: number;
+  productos: Producto[];
+  message?: string;
 }
 
 export interface CatalogStats {
@@ -44,4 +56,3 @@ export interface CatalogStats {
   productosDestacados: number;
   totalCategorias: number;
 }
-

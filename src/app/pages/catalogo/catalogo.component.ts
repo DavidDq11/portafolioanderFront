@@ -229,15 +229,22 @@ import { environment } from '../../../environments/environment';
                 <!-- Showcase Visual -->
                 <div
                   class="relative aspect-[16/10] sm:aspect-[16/11] lg:aspect-[4/3] bg-black overflow-hidden cursor-pointer"
-                  (click)="selectedProducto.set(spot)"
+                  (click)="openProductoModal(spot)"
                 >
                   <img
-                    [src]="spot.imagen_url || defaultImage"
+                    [src]="getProductImages(spot)[0]"
                     (error)="onImageError($event)"
                     [alt]="spot.nombre"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
+
+                  <span
+                    *ngIf="getProductImages(spot).length > 1"
+                    class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-black/80 border border-zinc-700 text-white font-mono text-[10px]"
+                  >
+                    {{ getProductImages(spot).length }} FOTOS
+                  </span>
 
                   <span
                     *ngIf="spot.codigo"
@@ -265,7 +272,7 @@ import { environment } from '../../../environments/environment';
                   <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <button
                       type="button"
-                      (click)="selectedProducto.set(spot)"
+                      (click)="openProductoModal(spot)"
                       class="px-3 py-2 border border-zinc-700 hover:border-white text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-zinc-200 transition-colors"
                     >
                       Ver
@@ -519,10 +526,10 @@ import { environment } from '../../../environments/environment';
             <!-- Studio Lookbook Image -->
             <div
               class="relative aspect-[4/5] bg-black overflow-hidden cursor-pointer border-b border-zinc-800/80"
-              (click)="selectedProducto.set(prod)"
+              (click)="openProductoModal(prod)"
             >
               <img
-                [src]="prod.imagen_url || defaultImage"
+                [src]="getProductImages(prod)[0]"
                 (error)="onImageError($event)"
                 [alt]="prod.nombre"
                 loading="lazy"
@@ -530,6 +537,14 @@ import { environment } from '../../../environments/environment';
               />
 
               <div class="absolute inset-x-0 bottom-0 h-16 sm:h-24 bg-gradient-to-t from-black/80 via-black/15 to-transparent pointer-events-none"></div>
+
+              <!-- Multi-Image Count Badge -->
+              <span
+                *ngIf="getProductImages(prod).length > 1"
+                class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-mono bg-black/85 text-white border border-zinc-700"
+              >
+                +{{ getProductImages(prod).length }} FOTOS
+              </span>
 
               <!-- Top-Right SKU -->
               <span
@@ -542,7 +557,7 @@ import { environment } from '../../../environments/environment';
               </span>
 
               <!-- Desktop Hover Quick-View Bar -->
-              <div class="hidden sm:flex absolute inset-x-3 bottom-3 items-center justify-between opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+              <div class="hidden sm:flex absolute inset-x-3 bottom-3 items-center justify-between opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
                 <span class="px-3 py-1.5 bg-white text-black text-[10px] font-mono font-bold uppercase tracking-widest">
                   Vista Rápida +
                 </span>
@@ -561,7 +576,7 @@ import { environment } from '../../../environments/environment';
                 </div>
 
                 <h3
-                  (click)="selectedProducto.set(prod)"
+                  (click)="openProductoModal(prod)"
                   [class]="mobileCols() === 2
                     ? 'text-[13px] sm:text-lg font-bold text-white group-hover:underline decoration-zinc-400 underline-offset-4 line-clamp-2 cursor-pointer leading-snug'
                     : 'text-base sm:text-lg font-bold text-white group-hover:underline decoration-zinc-400 underline-offset-4 line-clamp-2 cursor-pointer leading-snug'"
@@ -649,11 +664,11 @@ import { environment } from '../../../environments/environment';
         </div>
       </section>
 
-      <!-- Mobile-First Bottom Sheet / Desktop Lookbook Modal -->
+      <!-- Mobile-First Bottom Sheet / Desktop Lookbook Modal with Multi-Image Gallery -->
       <div
         *ngIf="selectedProducto() as prod"
         class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
-        (click)="selectedProducto.set(null)"
+        (click)="closeProductoModal()"
       >
         <div
           class="bg-[#0c0c0f] w-full sm:max-w-4xl max-h-[92dvh] flex flex-col md:grid md:grid-cols-2 border-t sm:border border-zinc-700 overflow-hidden"
@@ -661,24 +676,80 @@ import { environment } from '../../../environments/environment';
         >
           <!-- Scrollable Content Area on Mobile -->
           <div class="overflow-y-auto md:overflow-visible flex-1 md:contents">
-            <!-- Product Image -->
-            <div class="relative aspect-[4/3] sm:aspect-square md:aspect-auto bg-black border-b md:border-b-0 md:border-r border-zinc-800 shrink-0">
-              <img
-                [src]="prod.imagen_url || defaultImage"
-                (error)="onImageError($event)"
-                [alt]="prod.nombre"
-                class="w-full h-full object-cover"
-              />
-
-              <!-- Floating Mobile Close Button over Image -->
-              <button
-                type="button"
-                (click)="selectedProducto.set(null)"
-                class="md:hidden absolute top-3 right-3 w-9 h-9 bg-black/85 border border-zinc-600 text-white flex items-center justify-center text-sm"
-                aria-label="Cerrar detalle"
+            <!-- Product Multi-Image Gallery -->
+            <div class="flex flex-col bg-black border-b md:border-b-0 md:border-r border-zinc-800 shrink-0">
+              <div
+                class="relative aspect-[4/3] sm:aspect-square md:flex-1 bg-black overflow-hidden select-none"
+                (touchstart)="onGalleryTouchStart($event)"
+                (touchend)="onGalleryTouchEnd($event, prod)"
               >
-                ✕
-              </button>
+                <img
+                  [src]="getActiveModalImage(prod)"
+                  (error)="onImageError($event)"
+                  [alt]="prod.nombre"
+                  class="w-full h-full object-cover"
+                />
+
+                <!-- Image Index Indicator -->
+                <span
+                  *ngIf="getProductImages(prod).length > 1"
+                  class="absolute top-3 left-3 px-2.5 py-1 bg-black/85 border border-zinc-700 text-white font-mono text-[10px] tracking-widest"
+                >
+                  {{ padZero(activeImageIndex() + 1) }} / {{ padZero(getProductImages(prod).length) }}
+                </span>
+
+                <!-- Floating Mobile Close Button over Image -->
+                <button
+                  type="button"
+                  (click)="closeProductoModal()"
+                  class="md:hidden absolute top-3 right-3 w-9 h-9 bg-black/85 border border-zinc-600 text-white flex items-center justify-center text-sm"
+                  aria-label="Cerrar detalle"
+                >
+                  ✕
+                </button>
+
+                <!-- Prev / Next Gallery Arrows -->
+                <ng-container *ngIf="getProductImages(prod).length > 1">
+                  <button
+                    type="button"
+                    (click)="prevModalImage(prod)"
+                    class="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/80 hover:bg-white hover:text-black border border-zinc-700 text-white flex items-center justify-center transition-colors"
+                    aria-label="Imagen anterior"
+                  >
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    (click)="nextModalImage(prod)"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/80 hover:bg-white hover:text-black border border-zinc-700 text-white flex items-center justify-center transition-colors"
+                    aria-label="Siguiente imagen"
+                  >
+                    →
+                  </button>
+                </ng-container>
+              </div>
+
+              <!-- Thumbnails Strip (when product has > 1 photo) -->
+              <div
+                *ngIf="getProductImages(prod).length > 1"
+                class="flex items-center gap-2 p-2.5 bg-[#08080a] border-t border-zinc-800 overflow-x-auto no-scrollbar"
+              >
+                <button
+                  *ngFor="let img of getProductImages(prod); let i = index"
+                  type="button"
+                  (click)="activeImageIndex.set(i)"
+                  [class]="activeImageIndex() === i
+                    ? 'w-14 h-14 shrink-0 border-2 border-white overflow-hidden bg-black'
+                    : 'w-14 h-14 shrink-0 border border-zinc-800 opacity-55 hover:opacity-100 overflow-hidden bg-black transition-opacity'"
+                >
+                  <img
+                    [src]="img"
+                    (error)="onImageError($event)"
+                    [alt]="prod.nombre + ' ' + (i + 1)"
+                    class="w-full h-full object-cover"
+                  />
+                </button>
+              </div>
             </div>
 
             <!-- Product Info -->
@@ -690,7 +761,7 @@ import { environment } from '../../../environments/environment';
                   </span>
                   <button
                     type="button"
-                    (click)="selectedProducto.set(null)"
+                    (click)="closeProductoModal()"
                     class="hidden md:flex w-8 h-8 border border-zinc-700 hover:border-white items-center justify-center text-zinc-300 hover:text-white transition-colors"
                     aria-label="Cerrar detalle"
                   >
@@ -744,7 +815,7 @@ import { environment } from '../../../environments/environment';
                 </a>
                 <button
                   type="button"
-                  (click)="selectedProducto.set(null)"
+                  (click)="closeProductoModal()"
                   class="w-full py-2.5 border border-zinc-800 hover:border-zinc-500 text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
                 >
                   Seguir viendo el catálogo
@@ -757,7 +828,7 @@ import { environment } from '../../../environments/environment';
           <div class="md:hidden border-t border-zinc-800 bg-[#050507] p-3 pb-safe flex items-center gap-2 shrink-0">
             <button
               type="button"
-              (click)="selectedProducto.set(null)"
+              (click)="closeProductoModal()"
               class="px-3.5 py-3 border border-zinc-700 text-[11px] font-mono uppercase text-zinc-300 shrink-0"
             >
               Cerrar
@@ -810,7 +881,10 @@ export class CatalogoComponent implements OnInit {
   mobileCols = signal<1 | 2>(2);
 
   selectedProducto = signal<Producto | null>(null);
+  activeImageIndex = signal<number>(0);
   spotlightIndex = signal<number>(0);
+
+  private touchStartX = 0;
 
   readonly categoriasActivas = computed(() =>
     this.categorias().filter((c) => c.activo !== false)
@@ -898,6 +972,65 @@ export class CatalogoComponent implements OnInit {
     });
   }
 
+  openProductoModal(prod: Producto): void {
+    this.activeImageIndex.set(0);
+    this.selectedProducto.set(prod);
+  }
+
+  closeProductoModal(): void {
+    this.selectedProducto.set(null);
+    this.activeImageIndex.set(0);
+  }
+
+  getProductImages(prod: Producto): string[] {
+    const list: string[] = [];
+    if (Array.isArray(prod.imagenes)) {
+      for (const url of prod.imagenes) {
+        const clean = (url || '').trim();
+        if (clean && !list.includes(clean)) list.push(clean);
+      }
+    }
+    const cover = (prod.imagen_url || '').trim();
+    if (cover && !list.includes(cover)) {
+      list.unshift(cover);
+    }
+    return list.length > 0 ? list : [this.defaultImage];
+  }
+
+  getActiveModalImage(prod: Producto): string {
+    const images = this.getProductImages(prod);
+    const idx = Math.min(Math.max(this.activeImageIndex(), 0), images.length - 1);
+    return images[idx] || this.defaultImage;
+  }
+
+  nextModalImage(prod: Producto): void {
+    const len = this.getProductImages(prod).length;
+    if (len <= 1) return;
+    this.activeImageIndex.set((this.activeImageIndex() + 1) % len);
+  }
+
+  prevModalImage(prod: Producto): void {
+    const len = this.getProductImages(prod).length;
+    if (len <= 1) return;
+    this.activeImageIndex.set((this.activeImageIndex() - 1 + len) % len);
+  }
+
+  onGalleryTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.changedTouches[0]?.clientX ?? 0;
+  }
+
+  onGalleryTouchEnd(event: TouchEvent, prod: Producto): void {
+    const endX = event.changedTouches[0]?.clientX ?? 0;
+    const diff = this.touchStartX - endX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        this.nextModalImage(prod);
+      } else {
+        this.prevModalImage(prod);
+      }
+    }
+  }
+
   nextSpotlight(): void {
     const len = this.spotlightList().length;
     if (len <= 1) return;
@@ -920,9 +1053,10 @@ export class CatalogoComponent implements OnInit {
 
   getCategoryCoverImage(catId: number): string {
     const match = this.productosDisponibles().find(
-      (p) => Number(p.categoria_id) === Number(catId) && !!p.imagen_url
+      (p) => Number(p.categoria_id) === Number(catId)
     );
-    return match?.imagen_url || this.defaultImage;
+    if (!match) return this.defaultImage;
+    return this.getProductImages(match)[0];
   }
 
   getCategoryProductCount(catId: number): number {
