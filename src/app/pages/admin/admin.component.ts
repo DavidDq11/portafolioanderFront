@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { CatalogService } from '../../core/services/catalog.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Categoria, Producto } from '../../core/models/catalog.models';
+import { readXlsxRows } from '../../core/utils/xlsx-reader';
 
 interface BulkRowDraft {
   nombre: string;
@@ -961,11 +962,25 @@ interface BulkRowDraft {
                   >
                     Ejemplo
                   </button>
-                  <label class="px-3 py-1.5 bg-white text-black text-[10px] font-bold uppercase cursor-pointer">
-                    Subir .CSV
-                    <input type="file" accept=".csv,.txt" (change)="onCsvFileSelected($event)" class="hidden" />
+                  <label class="px-3 py-1.5 bg-white hover:bg-zinc-200 text-black text-[10px] font-bold uppercase cursor-pointer transition-colors">
+                    Subir Excel (.xlsx / .csv)
+                    <input type="file" accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onSpreadsheetFileSelected($event)" class="hidden" />
                   </label>
                 </div>
+              </div>
+
+              <div
+                *ngIf="bulkUploadedFileName()"
+                class="px-3 py-2 bg-[#111113] border border-zinc-700 text-[11px] font-mono text-zinc-200 flex items-center justify-between gap-2"
+              >
+                <span class="truncate">Archivo cargado: <strong class="text-white">{{ bulkUploadedFileName() }}</strong></span>
+                <button
+                  type="button"
+                  (click)="bulkUploadedFileName.set(''); bulkCsvText = ''"
+                  class="text-zinc-400 hover:text-white shrink-0"
+                >
+                  ✕
+                </button>
               </div>
 
               <textarea
@@ -1156,6 +1171,7 @@ export class AdminComponent implements OnInit {
   bulkRawLinksText = '';
   bulkRows: BulkRowDraft[] = [];
   bulkCsvText = '';
+  bulkUploadedFileName = signal<string>('');
 
   // Category Modal State
   showCategoriaModal = signal<boolean>(false);
@@ -1524,6 +1540,7 @@ export class AdminComponent implements OnInit {
     this.bulkNamePrefix = '';
     this.bulkRawLinksText = '';
     this.bulkCsvText = '';
+    this.bulkUploadedFileName.set('');
     this.bulkRows = [
       this.createEmptyBulkRow(),
       this.createEmptyBulkRow(),
@@ -1641,231 +1658,263 @@ export class AdminComponent implements OnInit {
     ].join('\n');
   }
 
-  onCsvFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.bulkCsvText = String(reader.result || '');
-    };
-    reader.readAsText(file, 'UTF-8');
+  async onSpreadsheetFileSelected(event: Event): Promise < void> {
+      const input = event.target as HTMLInputElement;
+      const file = input.files?.[0];
+      if(!file) return;
+
+      const lowerName = file.name.toLowerCase();
+
+      try {
+        if(lowerName.endsWith('.xlsx')) {
+      const rows = await readXlsxRows(file);
+      if (rows.length === 0) {
+        alert('El archivo Excel no contiene filas con datos.');
+        return;
+      }
+      this.bulkCsvText = rows
+        .map((cols) => cols.map((c) => c.replace(/\t|\r|\n/g, ' ').trim()).join('\t'))
+        .join('\n');
+      this.bulkUploadedFileName.set(file.name);
+    } else {
+      const text = await file.text();
+      this.bulkCsvText = text.replace(/^\uFEFF/, '');
+      this.bulkUploadedFileName.set(file.name);
+    }
+  } catch(err: unknown) {
+    const msg =
+      err instanceof Error
+        ? err.message
+        : 'No se pudo leer el archivo. Verifica que sea un .xlsx o .csv válido.';
+    alert(msg);
+  } finally {
     input.value = '';
   }
+  }
 
-  parseCsvToDrafts(): BulkRowDraft[] {
-    const raw = this.bulkCsvText.trim();
-    if (!raw) return [];
+  private parseFlexiblePrice(raw: string): number | null {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return this.bulkDefaultPrice;
+  // Quita decimales de 2 dígitos al final (ej: 185000.00 o 185.000,00) y limpia separadores de miles / símbolos
+  const withoutCents = trimmed.replace(/[.,]\d{2}$/, '');
+  const digits = withoutCents.replace(/[^\d]/g, '');
+  if (!digits) return this.bulkDefaultPrice;
+  const parsed = Number(digits);
+  return Number.isNaN(parsed) ? null : parsed;
+}
 
-    const lines = raw
-      .split(/\r?\n/)
-      .map((l) => l.trim())
+parseCsvToDrafts(): BulkRowDraft[] {
+  const raw = this.bulkCsvText.replace(/^\uFEFF/, '').trim();
+  if (!raw) return [];
+
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const drafts: BulkRowDraft[] = [];
+
+  lines.forEach((line, idx) => {
+    const delimiter = line.includes('\t') ? '\t' : line.includes(';') ? ';' : ',';
+    const cols = line.split(delimiter).map((c) => c.trim().replace(/^"|"$/g, ''));
+
+    if (idx === 0 && cols[0]?.toLowerCase() === 'nombre') return;
+
+    const nombre = cols[0] || '';
+    const precio = this.parseFlexiblePrice(cols[1] || '');
+
+    if (!nombre || precio === null || Number.isNaN(precio)) return;
+
+    const rowTags = (cols[2] || '')
+      .split(/[|;]+/)
+      .map((t) => t.trim())
       .filter(Boolean);
 
-    const drafts: BulkRowDraft[] = [];
-
-    lines.forEach((line, idx) => {
-      const delimiter = line.includes('\t') ? '\t' : line.includes(';') ? ';' : ',';
-      const cols = line.split(delimiter).map((c) => c.trim().replace(/^"|"$/g, ''));
-
-      if (idx === 0 && cols[0]?.toLowerCase() === 'nombre') return;
-
-      const nombre = cols[0] || '';
-      const rawPrice = (cols[1] || '').replace(/[^\d.]/g, '');
-      const precio = rawPrice ? Number(rawPrice) : this.bulkDefaultPrice;
-
-      if (!nombre || precio === null || Number.isNaN(precio)) return;
-
-      const rowTags = (cols[2] || '')
-        .split(/[|;]+/)
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-      drafts.push({
-        nombre,
-        precio,
-        tags: rowTags.length > 0 ? rowTags : [...this.bulkDefaultTags()],
-        imagenesText: cols.slice(3).join(' | '),
-      });
+    drafts.push({
+      nombre,
+      precio,
+      tags: rowTags.length > 0 ? rowTags : [...this.bulkDefaultTags()],
+      imagenesText: cols.slice(3).filter(Boolean).join(' | '),
     });
+  });
 
-    return drafts;
-  }
+  return drafts;
+}
 
-  pasarCsvATabla(): void {
-    const parsed = this.parseCsvToDrafts();
-    if (parsed.length === 0) return;
-    this.bulkRows = parsed;
-    this.bulkMode.set('table');
-  }
+pasarCsvATabla(): void {
+  const parsed = this.parseCsvToDrafts();
+  if(parsed.length === 0) return;
+  this.bulkRows = parsed;
+  this.bulkMode.set('table');
+}
 
   private getBulkDraftsSource(): BulkRowDraft[] {
-    if (this.bulkMode() === 'csv') return this.parseCsvToDrafts();
-    if (this.bulkMode() === 'links') {
-      const groups = this.parseBulkLinkLines();
-      const baseName =
-        this.bulkNamePrefix.trim() ||
-        this.getSelectedBulkCategoryName() ||
-        'Producto';
-      const startSeq = this.getNextSequenceForPrefix(
-        this.getCategoryPrefix(this.bulkCategoriaId())
-      );
-      return groups.map((urls, idx) => ({
-        nombre: `${baseName} #${startSeq + idx}`,
-        precio: this.bulkDefaultPrice,
-        tags: [...this.bulkDefaultTags()],
-        imagenesText: urls.join('\n'),
-      }));
-    }
-    return this.bulkRows;
+  if (this.bulkMode() === 'csv') return this.parseCsvToDrafts();
+  if (this.bulkMode() === 'links') {
+    const groups = this.parseBulkLinkLines();
+    const baseName =
+      this.bulkNamePrefix.trim() ||
+      this.getSelectedBulkCategoryName() ||
+      'Producto';
+    const startSeq = this.getNextSequenceForPrefix(
+      this.getCategoryPrefix(this.bulkCategoriaId())
+    );
+    return groups.map((urls, idx) => ({
+      nombre: `${baseName} #${startSeq + idx}`,
+      precio: this.bulkDefaultPrice,
+      tags: [...this.bulkDefaultTags()],
+      imagenesText: urls.join('\n'),
+    }));
   }
+  return this.bulkRows;
+}
 
-  getValidBulkProductsCount(): number {
-    return this.getBulkDraftsSource().filter(
-      (r) => r.nombre.trim().length > 0 && r.precio !== null && Number(r.precio) >= 0
-    ).length;
+getValidBulkProductsCount(): number {
+  return this.getBulkDraftsSource().filter(
+    (r) => r.nombre.trim().length > 0 && r.precio !== null && Number(r.precio) >= 0
+  ).length;
+}
+
+getSelectedBulkCategoryName(): string {
+  const id = this.bulkCategoriaId();
+  if (!id) return '';
+  return this.categorias().find((c) => Number(c.id) === Number(id))?.nombre || '';
+}
+
+guardarLoteMasivo(): void {
+  const catId = this.bulkCategoriaId();
+  if(!catId) {
+    alert('Selecciona primero la categoría para el lote.');
+    return;
   }
-
-  getSelectedBulkCategoryName(): string {
-    const id = this.bulkCategoriaId();
-    if (!id) return '';
-    return this.categorias().find((c) => Number(c.id) === Number(id))?.nombre || '';
-  }
-
-  guardarLoteMasivo(): void {
-    const catId = this.bulkCategoriaId();
-    if (!catId) {
-      alert('Selecciona primero la categoría para el lote.');
-      return;
-    }
 
     const validRows = this.getBulkDraftsSource().filter(
-      (r) => r.nombre.trim().length > 0 && r.precio !== null && Number(r.precio) >= 0
-    );
+    (r) => r.nombre.trim().length > 0 && r.precio !== null && Number(r.precio) >= 0
+  );
 
-    if (validRows.length === 0) {
-      alert('Asegúrate de tener nombre y precio en los productos antes de subir.');
-      return;
-    }
+  if(validRows.length === 0) {
+  alert('Asegúrate de tener nombre y precio en los productos antes de subir.');
+  return;
+}
 
-    const productosPayload: Partial<Producto>[] = validRows.map((r, idx) => {
-      const imgs = this.parseImagesList(r.imagenesText);
-      return {
-        categoria_id: catId,
-        codigo: this.generateNextCode(catId, idx),
-        nombre: r.nombre.trim(),
-        precio: Number(r.precio),
-        etiquetas: r.tags.join(', '),
-        descripcion: '',
-        imagen_url: imgs[0] || '',
-        imagenes: imgs,
-        precio_anterior: null,
-        destacado: false,
-        disponible: true,
-      };
-    });
+const productosPayload: Partial<Producto>[] = validRows.map((r, idx) => {
+  const imgs = this.parseImagesList(r.imagenesText);
+  return {
+    categoria_id: catId,
+    codigo: this.generateNextCode(catId, idx),
+    nombre: r.nombre.trim(),
+    precio: Number(r.precio),
+    etiquetas: r.tags.join(', '),
+    descripcion: '',
+    imagen_url: imgs[0] || '',
+    imagenes: imgs,
+    precio_anterior: null,
+    destacado: false,
+    disponible: true,
+  };
+});
 
-    this.saving.set(true);
-    this.catalogService
-      .crearProductosMasivo({
-        categoria_id: catId,
-        productos: productosPayload,
-      })
-      .subscribe({
-        next: (res) => {
-          this.saving.set(false);
-          this.showBulkModal.set(false);
-          this.mostrarToast(
-            `Se subieron ${res.creados} productos en ${this.getSelectedBulkCategoryName() || 'la categoría'}`
-          );
-          this.cargarDatos();
-        },
-        error: (err) => {
-          this.saving.set(false);
-          alert(err?.error?.message || 'Error al subir el lote de productos. Verifica la conexión con el backend.');
-        },
-      });
+this.saving.set(true);
+this.catalogService
+  .crearProductosMasivo({
+    categoria_id: catId,
+    productos: productosPayload,
+  })
+  .subscribe({
+    next: (res) => {
+      this.saving.set(false);
+      this.showBulkModal.set(false);
+      this.mostrarToast(
+        `Se subieron ${res.creados} productos en ${this.getSelectedBulkCategoryName() || 'la categoría'}`
+      );
+      this.cargarDatos();
+    },
+    error: (err) => {
+      this.saving.set(false);
+      alert(err?.error?.message || 'Error al subir el lote de productos. Verifica la conexión con el backend.');
+    },
+  });
   }
 
-  onImageError(event: Event): void {
-    const imgEl = event.target as HTMLImageElement;
-    if (imgEl && imgEl.src !== this.defaultImage) {
-      imgEl.src = this.defaultImage;
-    }
+onImageError(event: Event): void {
+  const imgEl = event.target as HTMLImageElement;
+  if(imgEl && imgEl.src !== this.defaultImage) {
+  imgEl.src = this.defaultImage;
+}
   }
 
-  // ==========================================================================
-  // CATEGORÍAS CRUD
-  // ==========================================================================
-  getEmptyCategoriaForm(): Partial<Categoria> {
-    return {
-      nombre: '',
-      descripcion: '',
-      icono: 'shirt',
-      orden: this.categorias().length + 1,
-      activo: true,
-    };
-  }
+// ==========================================================================
+// CATEGORÍAS CRUD
+// ==========================================================================
+getEmptyCategoriaForm(): Partial < Categoria > {
+  return {
+    nombre: '',
+    descripcion: '',
+    icono: 'shirt',
+    orden: this.categorias().length + 1,
+    activo: true,
+  };
+}
 
-  abrirModalCategoria(cat?: Categoria): void {
-    if (cat) {
-      this.editingCategoriaId.set(cat.id);
-      this.catForm = { ...cat };
-    } else {
-      this.editingCategoriaId.set(null);
-      this.catForm = this.getEmptyCategoriaForm();
-    }
+abrirModalCategoria(cat ?: Categoria): void {
+  if(cat) {
+    this.editingCategoriaId.set(cat.id);
+    this.catForm = { ...cat };
+  } else {
+    this.editingCategoriaId.set(null);
+    this.catForm = this.getEmptyCategoriaForm();
+  }
     this.showCategoriaModal.set(true);
+}
+
+guardarCategoria(): void {
+  if(!this.catForm.nombre) return;
+  this.saving.set(true);
+
+  const id = this.editingCategoriaId();
+  const req$ = id
+    ? this.catalogService.actualizarCategoria(id, this.catForm)
+    : this.catalogService.crearCategoria(this.catForm);
+
+  req$.subscribe({
+    next: () => {
+      this.saving.set(false);
+      this.showCategoriaModal.set(false);
+      this.mostrarToast(id ? 'Categoría actualizada' : 'Categoría creada');
+      this.cargarDatos();
+    },
+    error: (err) => {
+      this.saving.set(false);
+      alert(err?.error?.message || 'Error al guardar la categoría.');
+    },
+  });
+}
+
+eliminarCategoria(cat: Categoria): void {
+  if(!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
+this.catalogService.eliminarCategoria(cat.id).subscribe({
+  next: () => {
+    this.mostrarToast('Categoría eliminada');
+    this.cargarDatos();
+  },
+});
   }
 
-  guardarCategoria(): void {
-    if (!this.catForm.nombre) return;
-    this.saving.set(true);
-
-    const id = this.editingCategoriaId();
-    const req$ = id
-      ? this.catalogService.actualizarCategoria(id, this.catForm)
-      : this.catalogService.crearCategoria(this.catForm);
-
-    req$.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.showCategoriaModal.set(false);
-        this.mostrarToast(id ? 'Categoría actualizada' : 'Categoría creada');
-        this.cargarDatos();
-      },
-      error: (err) => {
-        this.saving.set(false);
-        alert(err?.error?.message || 'Error al guardar la categoría.');
-      },
-    });
-  }
-
-  eliminarCategoria(cat: Categoria): void {
-    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
-    this.catalogService.eliminarCategoria(cat.id).subscribe({
-      next: () => {
-        this.mostrarToast('Categoría eliminada');
-        this.cargarDatos();
-      },
-    });
-  }
-
-  formatPrice(value: number | string | null | undefined): string {
-    const num = Number(value || 0);
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    }).format(num);
-  }
+formatPrice(value: number | string | null | undefined): string {
+  const num = Number(value || 0);
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(num);
+}
 
   private mostrarToast(msg: string): void {
-    this.toastMessage.set(msg);
-    setTimeout(() => {
-      if (this.toastMessage() === msg) {
-        this.toastMessage.set('');
-      }
-    }, 3500);
+  this.toastMessage.set(msg);
+  setTimeout(() => {
+  if (this.toastMessage() === msg) {
+    this.toastMessage.set('');
+  }
+}, 3500);
   }
 }
