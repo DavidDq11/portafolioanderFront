@@ -9,9 +9,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
 interface BulkRowDraft {
   nombre: string;
   precio: number | null;
-  codigo: string;
-  etiquetas: string;
-  descripcion: string;
+  tags: string[];
   imagenesText: string;
 }
 
@@ -103,8 +101,8 @@ interface BulkRowDraft {
         </div>
 
         <!-- Tabs & Primary Actions -->
-        <div class="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6">
-          <div class="inline-flex border border-zinc-800 bg-black">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+          <div class="grid grid-cols-2 sm:inline-flex border border-zinc-800 bg-black">
             <button
               type="button"
               (click)="activeTab.set('productos')"
@@ -125,19 +123,19 @@ interface BulkRowDraft {
             </button>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="grid grid-cols-2 sm:flex items-center gap-2">
             <ng-container *ngIf="activeTab() === 'productos'">
               <button
                 type="button"
                 (click)="abrirModalMasivo()"
-                class="px-3.5 sm:px-4 py-2.5 border border-zinc-600 hover:border-white bg-black text-white text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors"
+                class="px-3.5 sm:px-4 py-2.5 border border-zinc-600 hover:border-white bg-black text-white text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors text-center"
               >
                 ↑ Subida Masiva
               </button>
               <button
                 type="button"
                 (click)="abrirModalProducto()"
-                class="px-4 sm:px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors"
+                class="px-4 sm:px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors text-center"
               >
                 + Nuevo Producto
               </button>
@@ -147,7 +145,7 @@ interface BulkRowDraft {
               *ngIf="activeTab() === 'categorias'"
               type="button"
               (click)="abrirModalCategoria()"
-              class="px-4 sm:px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors"
+              class="col-span-2 px-4 sm:px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors"
             >
               + Nueva Categoría
             </button>
@@ -164,9 +162,9 @@ interface BulkRowDraft {
                 [ngModel]="searchProducto()"
                 (ngModelChange)="searchProducto.set($event)"
                 placeholder="Buscar por nombre, código o etiqueta..."
-                class="w-full pl-9 pr-4 py-2 bg-black text-sm text-white placeholder-zinc-500 border border-zinc-800 focus:border-white outline-none"
+                class="w-full pl-9 pr-4 py-2.5 bg-black text-sm text-white placeholder-zinc-500 border border-zinc-800 focus:border-white outline-none"
               />
-              <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -175,7 +173,7 @@ interface BulkRowDraft {
             <select
               [ngModel]="filterCategoriaId()"
               (ngModelChange)="filterCategoriaId.set($event)"
-              class="w-full sm:w-auto px-3.5 py-2 bg-black border border-zinc-800 text-xs font-mono uppercase text-zinc-200 outline-none focus:border-white"
+              class="w-full sm:w-auto px-3.5 py-2.5 bg-black border border-zinc-800 text-xs font-mono uppercase text-zinc-200 outline-none focus:border-white"
             >
               <option [ngValue]="null">Todas las categorías</option>
               <option *ngFor="let c of categorias()" [ngValue]="c.id">
@@ -390,59 +388,48 @@ interface BulkRowDraft {
       </main>
 
       <!-- ================================================================== -->
-      <!-- MODAL CREAR / EDITAR PRODUCTO (CON GALERÍA MULTI-IMAGEN)           -->
+      <!-- MODAL CREAR / EDITAR PRODUCTO (RÁPIDO, CÓDIGO AUTO Y CHIPS)        -->
       <!-- ================================================================== -->
       <div
         *ngIf="showProductoModal()"
-        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+        class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       >
-        <div class="bg-[#111113] max-w-2xl w-full p-5 sm:p-8 border border-zinc-800 my-auto max-h-[92vh] overflow-y-auto">
-          <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
-            <h2 class="text-lg font-bold uppercase tracking-wider text-white">
-              {{ editingProductoId() ? 'Editar Producto' : 'Nuevo Producto' }}
-            </h2>
+        <form
+          (ngSubmit)="guardarProducto()"
+          class="bg-[#111113] w-full sm:max-w-2xl h-[94dvh] sm:h-auto sm:max-h-[92vh] border-t sm:border border-zinc-700 flex flex-col overflow-hidden"
+        >
+          <!-- Sticky Modal Header -->
+          <div class="px-4 sm:px-7 py-4 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0 bg-black">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold uppercase tracking-wider text-white">
+                {{ editingProductoId() ? 'Editar Producto' : 'Nuevo Producto' }}
+              </h2>
+              <p class="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mt-0.5">
+                Código automático: <span class="text-white">{{ prodForm.codigo || generateNextCode(prodForm.categoria_id) }}</span>
+              </p>
+            </div>
             <button
               type="button"
               (click)="showProductoModal.set(false)"
-              class="w-8 h-8 border border-zinc-800 hover:border-white flex items-center justify-center text-zinc-400 hover:text-white"
+              class="w-9 h-9 border border-zinc-800 hover:border-white flex items-center justify-center text-zinc-400 hover:text-white"
             >
               ✕
             </button>
           </div>
 
-          <form (ngSubmit)="guardarProducto()" class="mt-5 space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div class="sm:col-span-2">
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Nombre del Producto *</label>
-                <input
-                  type="text"
-                  name="nombre"
-                  [(ngModel)]="prodForm.nombre"
-                  required
-                  placeholder="Ej: Tenis Air Black / Camiseta Oversize"
-                  class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none"
-                />
-              </div>
-
+          <!-- Scrollable Form Body -->
+          <div class="flex-1 overflow-y-auto px-4 sm:px-7 py-5 space-y-5">
+            <!-- Categoría & Precio (2 cols) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Código / SKU</label>
-                <input
-                  type="text"
-                  name="codigo"
-                  [(ngModel)]="prodForm.codigo"
-                  placeholder="Ej: ZAP-001"
-                  class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Categoría *</label>
+                <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
+                  Categoría *
+                </label>
                 <select
                   name="categoria_id"
                   [(ngModel)]="prodForm.categoria_id"
-                  class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white focus:border-white outline-none"
+                  (ngModelChange)="onSingleCategoryChange($event)"
+                  class="w-full px-3.5 py-3 bg-black border border-zinc-800 text-sm text-white focus:border-white outline-none"
                 >
                   <option [ngValue]="null">-- Seleccionar --</option>
                   <option *ngFor="let c of categorias()" [ngValue]="c.id">
@@ -452,50 +439,66 @@ interface BulkRowDraft {
               </div>
 
               <div>
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Precio *</label>
+                <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
+                  Precio *
+                </label>
                 <input
                   type="number"
+                  inputmode="numeric"
                   name="precio"
                   [(ngModel)]="prodForm.precio"
                   required
                   min="0"
                   placeholder="180000"
-                  class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
+                  class="w-full px-3.5 py-3 bg-black border border-zinc-800 text-base text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
                 />
               </div>
             </div>
 
-            <!-- Galería Multi-Imagen -->
-            <div class="p-4 bg-black border border-zinc-800 space-y-3">
+            <!-- Nombre -->
+            <div>
+              <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
+                Nombre del Producto *
+              </label>
+              <input
+                type="text"
+                name="nombre"
+                [(ngModel)]="prodForm.nombre"
+                required
+                placeholder="Ej: Air Force Black / Camiseta Oversize"
+                class="w-full px-3.5 py-3 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none"
+              />
+            </div>
+
+            <!-- Galería Multi-Imagen por Links -->
+            <div class="p-3.5 sm:p-4 bg-black border border-zinc-800 space-y-3">
               <div class="flex items-center justify-between gap-2">
-                <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-300">
-                  Imágenes del Producto ({{ prodImages().length }})
+                <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-300">
+                  Fotos ({{ prodImages().length }})
                 </label>
                 <span class="text-[10px] font-mono text-zinc-500">
-                  La primera foto es la portada
+                  La primera es la portada
                 </span>
               </div>
 
-              <!-- Input para agregar 1 o varias URLs -->
               <div class="flex flex-col sm:flex-row gap-2">
                 <textarea
                   name="newImageUrls"
                   [(ngModel)]="newImageUrlInput"
                   rows="2"
-                  placeholder="Pega una o varias URLs (una por línea o separadas por coma)..."
-                  class="flex-1 px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
+                  placeholder="Pega 1 o varios links aquí (uno por línea)..."
+                  class="flex-1 px-3 py-2.5 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
                 ></textarea>
                 <button
                   type="button"
                   (click)="agregarImagenesDesdeInput()"
-                  class="px-4 py-2 bg-white hover:bg-zinc-200 text-black text-[11px] font-mono font-bold uppercase tracking-wider shrink-0 self-start sm:self-stretch"
+                  class="px-4 py-2.5 bg-white hover:bg-zinc-200 text-black text-[11px] font-mono font-bold uppercase tracking-wider shrink-0"
                 >
-                  + Agregar
+                  + Agregar fotos
                 </button>
               </div>
 
-              <!-- Grid de miniaturas -->
-              <div *ngIf="prodImages().length > 0" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 pt-1">
+              <div *ngIf="prodImages().length > 0" class="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
                 <div
                   *ngFor="let img of prodImages(); let idx = index"
                   [class]="idx === 0 ? 'relative border-2 border-white bg-zinc-950' : 'relative border border-zinc-800 bg-zinc-950'"
@@ -515,7 +518,7 @@ interface BulkRowDraft {
                   <button
                     type="button"
                     (click)="quitarImagenProducto(idx)"
-                    class="absolute top-1 right-1 w-6 h-6 bg-black/85 border border-zinc-600 hover:border-white text-white text-[10px] flex items-center justify-center"
+                    class="absolute top-1 right-1 w-6 h-6 bg-black/85 border border-zinc-600 text-white text-[10px] flex items-center justify-center"
                     aria-label="Quitar imagen"
                   >
                     ✕
@@ -524,360 +527,482 @@ interface BulkRowDraft {
                     *ngIf="idx > 0"
                     type="button"
                     (click)="hacerPortadaImagen(idx)"
-                    class="w-full py-1 bg-black/90 hover:bg-white hover:text-black text-zinc-300 text-[9px] font-mono uppercase border-t border-zinc-800 transition-colors"
+                    class="w-full py-1 bg-black/90 hover:bg-white hover:text-black text-zinc-300 text-[9px] font-mono uppercase border-t border-zinc-800"
                   >
-                    Hacer portada
+                    Portada
                   </button>
                 </div>
               </div>
-
-              <p *ngIf="prodImages().length === 0" class="text-[11px] font-mono text-zinc-500">
-                Aún no has agregado fotos. Puedes pegar varios enlaces a la vez (ImgBB, Cloudinary, Postimages, etc.).
-              </p>
             </div>
 
-            <div>
-              <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
-                Etiquetas (separadas por coma)
-              </label>
-              <input
-                type="text"
-                name="etiquetas"
-                [(ngModel)]="prodForm.etiquetas"
-                placeholder="Ej: Tallas 38-43, Cuero Sintético, Unisex"
-                class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none"
-              />
+            <!-- Etiquetas Recomendadas (1 toque) -->
+            <div class="p-3.5 sm:p-4 bg-black border border-zinc-800 space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-300">
+                  Etiquetas rápidas (toca para elegir)
+                </label>
+                <span class="text-[10px] font-mono text-zinc-500">
+                  {{ prodSelectedTags().length }} activas
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  *ngFor="let tag of getRecommendedTagsForCategory(prodForm.categoria_id)"
+                  type="button"
+                  (click)="toggleSingleTag(tag)"
+                  [class]="prodSelectedTags().includes(tag)
+                    ? 'px-3 py-1.5 text-[11px] font-mono font-bold bg-white text-black border border-white transition-colors'
+                    : 'px-3 py-1.5 text-[11px] font-mono bg-[#111113] text-zinc-400 border border-zinc-800 hover:border-zinc-500 hover:text-white transition-colors'"
+                >
+                  {{ prodSelectedTags().includes(tag) ? '✓ ' : '+ ' }}{{ tag }}
+                </button>
+              </div>
+
+              <!-- Etiquetas personalizadas adicionales -->
+              <div *ngIf="getCustomSingleTags().length > 0" class="flex flex-wrap gap-1.5 pt-1">
+                <button
+                  *ngFor="let tag of getCustomSingleTags()"
+                  type="button"
+                  (click)="toggleSingleTag(tag)"
+                  class="px-2.5 py-1 text-[10px] font-mono font-bold bg-zinc-200 text-black flex items-center gap-1"
+                >
+                  <span>{{ tag }}</span>
+                  <span>✕</span>
+                </button>
+              </div>
+
+              <div class="flex gap-2 pt-1">
+                <input
+                  type="text"
+                  name="customTagInput"
+                  [(ngModel)]="customTagInput"
+                  (keydown.enter)="$event.preventDefault(); addCustomSingleTag()"
+                  placeholder="Agregar otra etiqueta (opcional)..."
+                  class="flex-1 px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none"
+                />
+                <button
+                  type="button"
+                  (click)="addCustomSingleTag()"
+                  class="px-3.5 py-2 border border-zinc-700 hover:border-white text-[11px] font-mono uppercase text-zinc-200 shrink-0"
+                >
+                  + Añadir
+                </button>
+              </div>
             </div>
 
-            <div>
-              <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Descripción</label>
-              <textarea
-                name="descripcion"
-                [(ngModel)]="prodForm.descripcion"
-                rows="3"
-                placeholder="Describe los detalles principales del producto..."
-                class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none"
-              ></textarea>
-            </div>
-
-            <div class="pt-2">
-              <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-mono uppercase text-zinc-300">
+            <!-- Visibilidad -->
+            <div class="flex items-center justify-between py-1">
+              <label class="inline-flex items-center gap-2.5 cursor-pointer text-xs font-mono uppercase text-zinc-300">
                 <input
                   type="checkbox"
                   name="disponible"
                   [(ngModel)]="prodForm.disponible"
                   class="w-4 h-4 accent-white"
                 />
-                <span>Disponible (Visible en el catálogo)</span>
+                <span>Visible en el catálogo</span>
               </label>
-            </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 font-mono">
               <button
                 type="button"
-                (click)="showProductoModal.set(false)"
-                class="px-4 py-2.5 border border-zinc-800 hover:border-zinc-500 text-xs uppercase text-zinc-400 hover:text-white"
+                (click)="showOptionalDesc.set(!showOptionalDesc())"
+                class="text-[10px] font-mono uppercase text-zinc-500 hover:text-white underline underline-offset-4"
               >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                [disabled]="saving()"
-                class="px-6 py-2.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black text-xs font-bold uppercase tracking-wider"
-              >
-                {{ saving() ? 'Guardando...' : 'Guardar Producto' }}
+                {{ showOptionalDesc() ? 'Ocultar nota' : '+ Nota opcional' }}
               </button>
             </div>
-          </form>
-        </div>
+
+            <div *ngIf="showOptionalDesc()">
+              <textarea
+                name="descripcion"
+                [(ngModel)]="prodForm.descripcion"
+                rows="2"
+                placeholder="Descripción opcional..."
+                class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Sticky Bottom Save Bar (Mobile-friendly) -->
+          <div class="px-4 sm:px-7 py-3.5 pb-safe border-t border-zinc-800 bg-black flex items-center justify-end gap-2.5 shrink-0 font-mono">
+            <button
+              type="button"
+              (click)="showProductoModal.set(false)"
+              class="px-4 py-3 border border-zinc-800 hover:border-zinc-500 text-xs uppercase text-zinc-400 hover:text-white"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="saving() || !prodForm.nombre"
+              class="flex-1 sm:flex-none px-6 py-3 bg-white hover:bg-zinc-200 disabled:opacity-40 text-black text-xs font-bold uppercase tracking-wider"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar Producto' }}
+            </button>
+          </div>
+        </form>
       </div>
 
       <!-- ================================================================== -->
-      <!-- MODAL SUBIDA MASIVA DE PRODUCTOS POR CATEGORÍA                     -->
+      <!-- MODAL SUBIDA MASIVA DINÁMICA POR CATEGORÍA (CELULAR & PC)          -->
       <!-- ================================================================== -->
       <div
         *ngIf="showBulkModal()"
-        class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto"
+        class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       >
-        <div class="bg-[#111113] max-w-5xl w-full p-4 sm:p-7 border border-zinc-700 my-auto max-h-[94vh] flex flex-col">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between pb-4 border-b border-zinc-800 shrink-0">
+        <div class="bg-[#111113] w-full sm:max-w-5xl h-[96dvh] sm:h-auto sm:max-h-[94vh] border-t sm:border border-zinc-700 flex flex-col overflow-hidden">
+          <!-- Sticky Header -->
+          <div class="px-4 sm:px-7 py-3.5 sm:py-4 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0 bg-black">
             <div>
-              <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
-                Carga por Lote
+              <span class="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                Códigos automáticos · Sin descripción
               </span>
-              <h2 class="text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                Subida Masiva por Categoría
+              <h2 class="text-base sm:text-xl font-bold uppercase tracking-wider text-white">
+                Subida Masiva
               </h2>
             </div>
             <button
               type="button"
               (click)="showBulkModal.set(false)"
-              class="w-8 h-8 border border-zinc-800 hover:border-white flex items-center justify-center text-zinc-400 hover:text-white"
+              class="w-9 h-9 border border-zinc-800 hover:border-white flex items-center justify-center text-zinc-400 hover:text-white"
             >
               ✕
             </button>
           </div>
 
-          <!-- Body -->
-          <div class="overflow-y-auto flex-1 py-4 space-y-5">
-            <!-- Paso 1: Categoría común + Selector de Modo -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-black border border-zinc-800">
-              <div>
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
-                  1. Categoría para todo el lote *
-                </label>
-                <select
-                  name="bulk_categoria"
-                  [ngModel]="bulkCategoriaId()"
-                  (ngModelChange)="bulkCategoriaId.set($event)"
-                  class="w-full px-3.5 py-2.5 bg-[#111113] border border-zinc-700 text-sm text-white focus:border-white outline-none"
-                >
-                  <option [ngValue]="null">-- Seleccionar categoría (ej. Zapatos) --</option>
-                  <option *ngFor="let c of categorias()" [ngValue]="c.id">
-                    {{ c.nombre }}
-                  </option>
-                </select>
+          <!-- Scrollable Content -->
+          <div class="overflow-y-auto flex-1 px-3.5 sm:px-7 py-4 space-y-4">
+            <!-- Paso 1: Categoría + Precio base + Modo -->
+            <div class="p-3.5 sm:p-4 bg-black border border-zinc-800 space-y-3.5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
+                    1. Categoría del lote *
+                  </label>
+                  <select
+                    name="bulk_categoria"
+                    [ngModel]="bulkCategoriaId()"
+                    (ngModelChange)="onBulkCategoryChange($event)"
+                    class="w-full px-3 py-2.5 bg-[#111113] border border-zinc-700 text-sm text-white focus:border-white outline-none"
+                  >
+                    <option [ngValue]="null">-- Seleccionar (ej. Zapatos) --</option>
+                    <option *ngFor="let c of categorias()" [ngValue]="c.id">
+                      {{ c.nombre }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
+                    2. Precio base (opcional)
+                  </label>
+                  <div class="flex gap-2">
+                    <input
+                      type="number"
+                      inputmode="numeric"
+                      [(ngModel)]="bulkDefaultPrice"
+                      placeholder="Ej: 180000"
+                      class="flex-1 px-3 py-2.5 bg-[#111113] border border-zinc-700 text-sm text-white font-mono outline-none focus:border-white"
+                    />
+                    <button
+                      type="button"
+                      (click)="aplicarDefaultsMasivo()"
+                      class="px-3 py-2.5 border border-zinc-600 hover:border-white text-[10px] font-mono uppercase text-white shrink-0"
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                </div>
               </div>
 
+              <!-- Etiquetas recomendadas para todo el lote -->
               <div>
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1.5">
-                  2. Método de carga
-                </label>
-                <div class="grid grid-cols-2 border border-zinc-800 bg-[#111113]">
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <label class="text-[10px] font-mono uppercase tracking-widest text-zinc-400">
+                    3. Etiquetas por defecto (toca y aplica a todos)
+                  </label>
                   <button
+                    *ngIf="bulkDefaultTags().length > 0 && bulkMode() === 'table'"
                     type="button"
-                    (click)="bulkMode.set('table')"
-                    [class]="bulkMode() === 'table'
-                      ? 'py-2.5 text-[11px] font-mono font-bold uppercase bg-white text-black'
-                      : 'py-2.5 text-[11px] font-mono uppercase text-zinc-400 hover:text-white'"
+                    (click)="aplicarDefaultsMasivo()"
+                    class="text-[10px] font-mono uppercase text-white underline underline-offset-4"
                   >
-                    Tabla Rápida
-                  </button>
-                  <button
-                    type="button"
-                    (click)="bulkMode.set('csv')"
-                    [class]="bulkMode() === 'csv'
-                      ? 'py-2.5 text-[11px] font-mono font-bold uppercase bg-white text-black'
-                      : 'py-2.5 text-[11px] font-mono uppercase text-zinc-400 hover:text-white'"
-                  >
-                    Pegar Excel / CSV
+                    Aplicar a filas
                   </button>
                 </div>
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    *ngFor="let tag of getRecommendedTagsForCategory(bulkCategoriaId())"
+                    type="button"
+                    (click)="toggleBulkDefaultTag(tag)"
+                    [class]="bulkDefaultTags().includes(tag)
+                      ? 'px-2.5 py-1.5 text-[10px] sm:text-[11px] font-mono font-bold bg-white text-black border border-white transition-colors'
+                      : 'px-2.5 py-1.5 text-[10px] sm:text-[11px] font-mono bg-[#111113] text-zinc-400 border border-zinc-800 hover:border-zinc-500 hover:text-white transition-colors'"
+                  >
+                    {{ bulkDefaultTags().includes(tag) ? '✓ ' : '+ ' }}{{ tag }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Selector de Método (3 modos) -->
+              <div class="grid grid-cols-3 border border-zinc-800 bg-[#111113] pt-0">
+                <button
+                  type="button"
+                  (click)="bulkMode.set('links')"
+                  [class]="bulkMode() === 'links'
+                    ? 'py-2.5 px-2 text-[10px] sm:text-[11px] font-mono font-bold uppercase bg-white text-black'
+                    : 'py-2.5 px-2 text-[10px] sm:text-[11px] font-mono uppercase text-zinc-400 hover:text-white'"
+                >
+                  Pegar Links
+                </button>
+                <button
+                  type="button"
+                  (click)="bulkMode.set('table')"
+                  [class]="bulkMode() === 'table'
+                    ? 'py-2.5 px-2 text-[10px] sm:text-[11px] font-mono font-bold uppercase bg-white text-black'
+                    : 'py-2.5 px-2 text-[10px] sm:text-[11px] font-mono uppercase text-zinc-400 hover:text-white'"
+                >
+                  Tarjetas ({{ bulkRows.length }})
+                </button>
+                <button
+                  type="button"
+                  (click)="bulkMode.set('csv')"
+                  [class]="bulkMode() === 'csv'
+                    ? 'py-2.5 px-2 text-[10px] sm:text-[11px] font-mono font-bold uppercase bg-white text-black'
+                    : 'py-2.5 px-2 text-[10px] sm:text-[11px] font-mono uppercase text-zinc-400 hover:text-white'"
+                >
+                  Excel / CSV
+                </button>
               </div>
             </div>
 
-            <!-- MODO 1: TABLA RÁPIDA MULTI-FILA -->
-            <div *ngIf="bulkMode() === 'table'" class="space-y-4">
-              <!-- Atajos para rellenar precio o etiquetas en todas las filas -->
-              <div class="p-3.5 bg-[#0c0c0f] border border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
-                <div class="flex-1">
-                  <label class="block text-[10px] font-mono uppercase text-zinc-500 mb-1">Precio común (opcional)</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="bulkDefaultPrice"
-                    placeholder="Ej: 180000"
-                    class="w-full px-3 py-2 bg-black border border-zinc-800 text-xs text-white font-mono outline-none focus:border-white"
-                  />
-                </div>
-                <div class="flex-1">
-                  <label class="block text-[10px] font-mono uppercase text-zinc-500 mb-1">Etiquetas comunes (opcional)</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="bulkDefaultTags"
-                    placeholder="Ej: Tallas 38-43, Entrega inmediata"
-                    class="w-full px-3 py-2 bg-black border border-zinc-800 text-xs text-white outline-none focus:border-white"
-                  />
-                </div>
-                <button
-                  type="button"
-                  (click)="aplicarDefaultsMasivo()"
-                  class="px-4 py-2 border border-zinc-600 hover:border-white text-[11px] font-mono uppercase text-white shrink-0"
-                >
-                  Aplicar a todas
-                </button>
+            <!-- ============================================================ -->
+            <!-- MODO A: PEGAR LINKS MASIVOS (Postimages / ImgBB → 1 clic)    -->
+            <!-- ============================================================ -->
+            <div *ngIf="bulkMode() === 'links'" class="p-3.5 sm:p-4 bg-black border border-zinc-800 space-y-3.5">
+              <div>
+                <p class="text-xs font-bold text-white uppercase tracking-wide">
+                  Pega tus links de Postimages / ImgBB y genera todos los productos al instante
+                </p>
+                <p class="text-[11px] font-mono text-zinc-400 mt-1">
+                  • <strong>1 link por línea</strong> = crea 1 producto por cada foto.<br />
+                  • <strong>Varios links separados con coma o <code class="text-white">|</code> en la misma línea</strong> = 1 producto con varias fotos.
+                </p>
               </div>
 
-              <!-- Filas de productos -->
-              <div class="space-y-3">
-                <div
-                  *ngFor="let row of bulkRows; let i = index"
-                  class="p-3.5 bg-black border border-zinc-800 space-y-3"
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-zinc-400 mb-1">
+                  Nombre base automático (luego puedes editar cada uno)
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="bulkNamePrefix"
+                  [placeholder]="'Ej: ' + (getSelectedBulkCategoryName() || 'Zapatos') + ' Modelo'"
+                  class="w-full px-3 py-2.5 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none"
+                />
+              </div>
+
+              <textarea
+                [(ngModel)]="bulkRawLinksText"
+                rows="6"
+                placeholder="Pega aquí la lista de links directos:&#10;https://i.postimg.cc/foto1.jpg | https://i.postimg.cc/foto1-angulo2.jpg&#10;https://i.postimg.cc/foto2.jpg&#10;https://i.postimg.cc/foto3.jpg"
+                class="w-full p-3 bg-[#111113] border border-zinc-800 focus:border-white text-xs text-white placeholder-zinc-600 font-mono outline-none"
+              ></textarea>
+
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <span class="text-[11px] font-mono text-zinc-400">
+                  Líneas con fotos detectadas: <strong class="text-white">{{ countBulkLinkGroups() }}</strong> productos
+                </span>
+                <button
+                  type="button"
+                  (click)="generarTarjetasDesdeLinks()"
+                  [disabled]="countBulkLinkGroups() === 0"
+                  class="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-zinc-200 disabled:opacity-40 text-black text-xs font-mono font-bold uppercase tracking-wider"
                 >
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-400">
-                      Producto #{{ i + 1 }}
-                      <span *ngIf="parseImagesList(row.imagenesText).length > 0" class="text-white ml-2">
+                  Generar {{ countBulkLinkGroups() }} Productos →
+                </button>
+              </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- MODO B: TARJETAS RÁPIDAS (EDITABLES EN CELULAR Y PC)         -->
+            <!-- ============================================================ -->
+            <div *ngIf="bulkMode() === 'table'" class="space-y-3">
+              <div
+                *ngFor="let row of bulkRows; let i = index"
+                class="p-3.5 bg-black border border-zinc-800 space-y-3"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider">
+                    <span class="px-2 py-0.5 bg-white text-black font-bold">
+                      {{ getPreviewBulkCode(i) }}
+                    </span>
+                    <span class="text-zinc-400">
+                      #{{ i + 1 }}
+                      <span *ngIf="parseImagesList(row.imagenesText).length > 0" class="text-white">
                         · {{ parseImagesList(row.imagenesText).length }} foto(s)
                       </span>
                     </span>
-                    <div class="flex items-center gap-1.5 font-mono">
-                      <button
-                        type="button"
-                        (click)="duplicarFilaMasiva(i)"
-                        class="px-2 py-1 border border-zinc-800 hover:border-zinc-500 text-[10px] uppercase text-zinc-400 hover:text-white"
-                      >
-                        Duplicar
-                      </button>
-                      <button
-                        type="button"
-                        (click)="eliminarFilaMasiva(i)"
-                        [disabled]="bulkRows.length <= 1"
-                        class="px-2 py-1 border border-zinc-800 hover:border-white disabled:opacity-30 text-[10px] uppercase text-zinc-400 hover:text-white"
-                      >
-                        ✕
-                      </button>
-                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 font-mono">
+                    <button
+                      type="button"
+                      (click)="duplicarFilaMasiva(i)"
+                      class="px-2.5 py-1 border border-zinc-800 hover:border-zinc-500 text-[10px] uppercase text-zinc-400 hover:text-white"
+                    >
+                      Duplicar
+                    </button>
+                    <button
+                      type="button"
+                      (click)="eliminarFilaMasiva(i)"
+                      [disabled]="bulkRows.length <= 1"
+                      class="px-2.5 py-1 border border-zinc-800 hover:border-white disabled:opacity-30 text-[10px] uppercase text-zinc-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nombre + Precio + Miniaturas -->
+                <div class="flex items-start gap-3">
+                  <!-- Miniatura principal si ya hay link -->
+                  <div *ngIf="parseImagesList(row.imagenesText).length > 0" class="relative shrink-0">
+                    <img
+                      [src]="parseImagesList(row.imagenesText)[0]"
+                      (error)="onImageError($event)"
+                      alt="Preview"
+                      class="w-16 h-16 object-cover border border-zinc-700 bg-zinc-950"
+                    />
+                    <span
+                      *ngIf="parseImagesList(row.imagenesText).length > 1"
+                      class="absolute bottom-0.5 right-0.5 px-1 bg-black/90 text-white text-[9px] font-mono border border-zinc-700"
+                    >
+                      +{{ parseImagesList(row.imagenesText).length - 1 }}
+                    </span>
                   </div>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                    <div class="sm:col-span-5">
+                  <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-8">
                       <input
                         type="text"
                         [(ngModel)]="row.nombre"
-                        placeholder="Nombre del producto * (Ej: Air Force Black)"
-                        class="w-full px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none"
-                      />
-                    </div>
-                    <div class="sm:col-span-3">
-                      <input
-                        type="number"
-                        [(ngModel)]="row.precio"
-                        min="0"
-                        placeholder="Precio * (Ej: 180000)"
-                        class="w-full px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
+                        placeholder="Nombre del producto *"
+                        class="w-full px-3 py-2.5 bg-[#111113] border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none"
                       />
                     </div>
                     <div class="sm:col-span-4">
                       <input
-                        type="text"
-                        [(ngModel)]="row.codigo"
-                        placeholder="Código / SKU (opcional)"
-                        class="w-full px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
+                        type="number"
+                        inputmode="numeric"
+                        [(ngModel)]="row.precio"
+                        min="0"
+                        placeholder="Precio *"
+                        class="w-full px-3 py-2.5 bg-[#111113] border border-zinc-800 text-sm text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
                       />
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <input
-                      type="text"
-                      [(ngModel)]="row.etiquetas"
-                      placeholder="Etiquetas (Ej: Tallas 38-43, Cuero)"
-                      class="w-full px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none"
-                    />
-                    <input
-                      type="text"
-                      [(ngModel)]="row.descripcion"
-                      placeholder="Descripción corta (opcional)"
-                      class="w-full px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none"
-                    />
-                  </div>
-
-                  <div class="flex flex-col sm:flex-row items-start gap-2.5">
-                    <textarea
-                      [(ngModel)]="row.imagenesText"
-                      rows="2"
-                      placeholder="URLs de imágenes (1 o varias separadas por coma, | o salto de línea)..."
-                      class="w-full flex-1 px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
-                    ></textarea>
-
-                    <!-- Mini vista previa de fotos de esta fila -->
-                    <div *ngIf="parseImagesList(row.imagenesText).length > 0" class="flex items-center gap-1.5 shrink-0">
-                      <img
-                        *ngFor="let thumb of parseImagesList(row.imagenesText).slice(0, 3)"
-                        [src]="thumb"
-                        (error)="onImageError($event)"
-                        alt="Preview"
-                        class="w-12 h-12 object-cover border border-zinc-700 bg-zinc-950"
-                      />
-                      <span
-                        *ngIf="parseImagesList(row.imagenesText).length > 3"
-                        class="w-10 h-12 border border-zinc-800 bg-zinc-950 flex items-center justify-center text-[10px] font-mono text-zinc-400"
-                      >
-                        +{{ parseImagesList(row.imagenesText).length - 3 }}
-                      </span>
                     </div>
                   </div>
                 </div>
+
+                <!-- Links de fotos de este producto -->
+                <textarea
+                  [(ngModel)]="row.imagenesText"
+                  rows="2"
+                  placeholder="Pega 1 o varios links de fotos (separados por línea, coma o |)..."
+                  class="w-full px-3 py-2 bg-[#111113] border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:border-white outline-none font-mono"
+                ></textarea>
+
+                <!-- Chips de etiquetas recomendadas por fila (1 toque) -->
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    *ngFor="let tag of getRecommendedTagsForCategory(bulkCategoriaId())"
+                    type="button"
+                    (click)="toggleRowTag(row, tag)"
+                    [class]="row.tags.includes(tag)
+                      ? 'px-2 py-1 text-[10px] font-mono font-bold bg-white text-black border border-white'
+                      : 'px-2 py-1 text-[10px] font-mono bg-[#111113] text-zinc-500 border border-zinc-800 hover:text-zinc-200'"
+                  >
+                    {{ row.tags.includes(tag) ? '✓ ' : '+ ' }}{{ tag }}
+                  </button>
+                </div>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2 pt-1">
                 <button
                   type="button"
                   (click)="agregarFilasMasivas(1)"
-                  class="px-4 py-2 border border-zinc-700 hover:border-white text-xs font-mono uppercase text-white"
+                  class="px-4 py-2.5 border border-zinc-700 hover:border-white text-xs font-mono uppercase text-white"
                 >
-                  + Agregar fila
+                  + Agregar producto
                 </button>
                 <button
                   type="button"
                   (click)="agregarFilasMasivas(5)"
-                  class="px-4 py-2 border border-zinc-800 hover:border-zinc-500 text-xs font-mono uppercase text-zinc-300"
+                  class="px-4 py-2.5 border border-zinc-800 hover:border-zinc-500 text-xs font-mono uppercase text-zinc-300"
                 >
-                  + Agregar 5 filas
+                  + Agregar 5
                 </button>
               </div>
             </div>
 
-            <!-- MODO 2: PEGAR EXCEL / IMPORTAR CSV -->
-            <div *ngIf="bulkMode() === 'csv'" class="space-y-4">
-              <div class="p-4 bg-black border border-zinc-800 space-y-3">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <p class="text-xs font-mono text-zinc-400">
-                    Columnas: <span class="text-white">nombre, precio, codigo, etiquetas, descripcion, imagenes</span>
-                    (varias fotos separadas con <code class="text-white">|</code>)
-                  </p>
-                  <div class="flex items-center gap-2 font-mono">
-                    <button
-                      type="button"
-                      (click)="cargarEjemploCsv()"
-                      class="px-3 py-1.5 border border-zinc-700 hover:border-white text-[10px] uppercase text-zinc-200"
-                    >
-                      Cargar ejemplo
-                    </button>
-                    <label class="px-3 py-1.5 bg-white text-black text-[10px] font-bold uppercase cursor-pointer">
-                      Subir .CSV
-                      <input type="file" accept=".csv,.txt" (change)="onCsvFileSelected($event)" class="hidden" />
-                    </label>
-                  </div>
-                </div>
-
-                <textarea
-                  [(ngModel)]="bulkCsvText"
-                  rows="7"
-                  placeholder="Pega aquí las filas copiadas desde Excel / Google Sheets o escribe en formato CSV:&#10;Tenis Street Black, 185000, ZAP-01, Tallas 38-43, Suela vulcanizada, https://url1.jpg | https://url2.jpg"
-                  class="w-full p-3 bg-[#111113] border border-zinc-800 focus:border-white text-xs text-white font-mono outline-none"
-                ></textarea>
-
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-[11px] font-mono text-zinc-400">
-                    Detectados listos para importar: <strong class="text-white">{{ parseCsvToDrafts().length }}</strong> productos
-                  </span>
+            <!-- ============================================================ -->
+            <!-- MODO C: PEGAR EXCEL / IMPORTAR CSV                           -->
+            <!-- ============================================================ -->
+            <div *ngIf="bulkMode() === 'csv'" class="p-3.5 sm:p-4 bg-black border border-zinc-800 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-[11px] font-mono text-zinc-400">
+                  Formato simple: <span class="text-white">nombre, precio, etiquetas, imagenes</span>
+                  (varias fotos con <code class="text-white">|</code>; el código se genera automático).
+                </p>
+                <div class="flex items-center gap-2 font-mono">
                   <button
                     type="button"
-                    (click)="pasarCsvATabla()"
-                    [disabled]="parseCsvToDrafts().length === 0"
-                    class="px-3.5 py-2 border border-zinc-700 hover:border-white disabled:opacity-40 text-[10px] font-mono uppercase text-zinc-200"
+                    (click)="cargarEjemploCsv()"
+                    class="px-3 py-1.5 border border-zinc-700 hover:border-white text-[10px] uppercase text-zinc-200"
                   >
-                    Revisar en Tabla Rápida →
+                    Ejemplo
                   </button>
+                  <label class="px-3 py-1.5 bg-white text-black text-[10px] font-bold uppercase cursor-pointer">
+                    Subir .CSV
+                    <input type="file" accept=".csv,.txt" (change)="onCsvFileSelected($event)" class="hidden" />
+                  </label>
                 </div>
+              </div>
+
+              <textarea
+                [(ngModel)]="bulkCsvText"
+                rows="6"
+                placeholder="Tenis Street Black, 185000, Tallas 38-43, https://url1.jpg | https://url2.jpg"
+                class="w-full p-3 bg-[#111113] border border-zinc-800 focus:border-white text-xs text-white font-mono outline-none"
+              ></textarea>
+
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-[11px] font-mono text-zinc-400">
+                  Detectados: <strong class="text-white">{{ parseCsvToDrafts().length }}</strong> productos
+                </span>
+                <button
+                  type="button"
+                  (click)="pasarCsvATabla()"
+                  [disabled]="parseCsvToDrafts().length === 0"
+                  class="px-3.5 py-2 border border-zinc-700 hover:border-white disabled:opacity-40 text-[10px] font-mono uppercase text-zinc-200"
+                >
+                  Editar en Tarjetas →
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Modal Footer -->
-          <div class="pt-4 border-t border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0 font-mono">
+          <!-- Sticky Bottom Footer (Always reachable on phone) -->
+          <div class="px-4 sm:px-7 py-3.5 pb-safe border-t border-zinc-800 bg-black flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0 font-mono">
             <div class="text-[11px] text-zinc-400">
-              Listos para subir: <strong class="text-white">{{ getValidBulkProductsCount() }}</strong> producto(s)
+              Listos: <strong class="text-white">{{ getValidBulkProductsCount() }}</strong>
               <span *ngIf="getSelectedBulkCategoryName()"> en <strong class="text-white uppercase">{{ getSelectedBulkCategoryName() }}</strong></span>
             </div>
 
-            <div class="flex items-center justify-end gap-2.5">
+            <div class="flex items-center gap-2">
               <button
                 type="button"
                 (click)="showBulkModal.set(false)"
-                class="px-4 py-2.5 border border-zinc-800 hover:border-zinc-500 text-xs uppercase text-zinc-400 hover:text-white"
+                class="px-4 py-3 border border-zinc-800 hover:border-zinc-500 text-xs uppercase text-zinc-400 hover:text-white"
               >
                 Cancelar
               </button>
@@ -885,9 +1010,9 @@ interface BulkRowDraft {
                 type="button"
                 (click)="guardarLoteMasivo()"
                 [disabled]="saving() || getValidBulkProductsCount() === 0 || !bulkCategoriaId()"
-                class="px-5 py-2.5 bg-white hover:bg-zinc-200 disabled:opacity-40 text-black text-xs font-bold uppercase tracking-wider"
+                class="flex-1 sm:flex-none px-5 py-3 bg-white hover:bg-zinc-200 disabled:opacity-40 text-black text-xs font-bold uppercase tracking-wider"
               >
-                {{ saving() ? 'Subiendo lote...' : 'Subir ' + getValidBulkProductsCount() + ' Productos' }}
+                {{ saving() ? 'Subiendo...' : 'Subir ' + getValidBulkProductsCount() + ' Productos' }}
               </button>
             </div>
           </div>
@@ -897,9 +1022,9 @@ interface BulkRowDraft {
       <!-- MODAL CREAR / EDITAR CATEGORÍA -->
       <div
         *ngIf="showCategoriaModal()"
-        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       >
-        <div class="bg-[#111113] max-w-md w-full p-5 sm:p-8 border border-zinc-800">
+        <div class="bg-[#111113] w-full sm:max-w-md p-5 sm:p-8 border-t sm:border border-zinc-800">
           <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
             <h2 class="text-lg font-bold uppercase tracking-wider text-white">
               {{ editingCategoriaId() ? 'Editar Categoría' : 'Nueva Categoría' }}
@@ -947,6 +1072,7 @@ interface BulkRowDraft {
                 <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Orden</label>
                 <input
                   type="number"
+                  inputmode="numeric"
                   name="cat_orden"
                   [(ngModel)]="catForm.orden"
                   class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white outline-none focus:border-white font-mono"
@@ -955,12 +1081,12 @@ interface BulkRowDraft {
             </div>
 
             <div>
-              <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Descripción</label>
+              <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">Descripción (opcional)</label>
               <textarea
                 name="cat_descripcion"
                 [(ngModel)]="catForm.descripcion"
                 rows="2"
-                placeholder="Breve descripción de la categoría..."
+                placeholder="Breve descripción..."
                 class="w-full px-3.5 py-2.5 bg-black border border-zinc-800 text-sm text-white placeholder-zinc-600 outline-none focus:border-white"
               ></textarea>
             </div>
@@ -975,7 +1101,7 @@ interface BulkRowDraft {
               <span>Categoría activa en el catálogo</span>
             </label>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 font-mono">
+            <div class="flex items-center justify-end gap-3 pt-4 pb-safe border-t border-zinc-800 font-mono">
               <button
                 type="button"
                 (click)="showCategoriaModal.set(false)"
@@ -1011,19 +1137,27 @@ export class AdminComponent implements OnInit {
   searchProducto = signal<string>('');
   filterCategoriaId = signal<number | null>(null);
 
+  // Single Product Modal State
   showProductoModal = signal<boolean>(false);
   editingProductoId = signal<number | null>(null);
   prodImages = signal<string[]>([]);
+  prodSelectedTags = signal<string[]>([]);
+  showOptionalDesc = signal<boolean>(false);
   newImageUrlInput = '';
+  customTagInput = '';
 
+  // Bulk Upload Modal State
   showBulkModal = signal<boolean>(false);
-  bulkMode = signal<'table' | 'csv'>('table');
+  bulkMode = signal<'links' | 'table' | 'csv'>('links');
   bulkCategoriaId = signal<number | null>(null);
   bulkDefaultPrice: number | null = null;
-  bulkDefaultTags = '';
+  bulkDefaultTags = signal<string[]>([]);
+  bulkNamePrefix = '';
+  bulkRawLinksText = '';
   bulkRows: BulkRowDraft[] = [];
   bulkCsvText = '';
 
+  // Category Modal State
   showCategoriaModal = signal<boolean>(false);
   editingCategoriaId = signal<number | null>(null);
 
@@ -1059,6 +1193,132 @@ export class AdminComponent implements OnInit {
   cargarDatos(): void {
     this.catalogService.getCategorias().subscribe((cats) => this.categorias.set(cats));
     this.catalogService.getProductos().subscribe((prods) => this.productos.set(prods));
+  }
+
+  // ==========================================================================
+  // CÓDIGO AUTOMÁTICO POR CATEGORÍA + ETIQUETAS RECOMENDADAS
+  // ==========================================================================
+  private getCategoryPrefix(catId: number | null | undefined): string {
+    const cat = this.categorias().find((c) => Number(c.id) === Number(catId));
+    if (!cat?.nombre) return 'PRD';
+    const clean = cat.nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase();
+    return (clean.slice(0, 3) || 'PRD').padEnd(3, 'X');
+  }
+
+  private getNextSequenceForPrefix(prefix: string): number {
+    const regex = new RegExp(`^${prefix}-(\\d+)$`, 'i');
+    let max = 0;
+    for (const p of this.productos()) {
+      const match = (p.codigo || '').trim().match(regex);
+      if (match) {
+        const num = Number(match[1]);
+        if (num > max) max = num;
+      }
+    }
+    return max + 1;
+  }
+
+  generateNextCode(catId: number | null | undefined, offset = 0): string {
+    const prefix = this.getCategoryPrefix(catId);
+    const nextNum = this.getNextSequenceForPrefix(prefix) + offset;
+    return `${prefix}-${String(nextNum).padStart(3, '0')}`;
+  }
+
+  getRecommendedTagsForCategory(catId: number | null | undefined): string[] {
+    const cat = this.categorias().find((c) => Number(c.id) === Number(catId));
+    const name = (cat?.nombre || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+    if (/(zapat|tenis|calzad|sneaker|bota|sandal)/.test(name)) {
+      return [
+        'Tallas 36-40',
+        'Tallas 38-43',
+        'Tallas 35-43',
+        'Unisex',
+        'Importado',
+        'Triple A',
+        'Caja original',
+        'Envío inmediato',
+      ];
+    }
+
+    if (/(camiset|ropa|moda|hoodie|buzo|pantalon|jean|chaqueta|polo|sudad)/.test(name)) {
+      return [
+        'Tallas S-XL',
+        'Oversize',
+        'Algodón',
+        'Unisex',
+        'Nuevo',
+        'Edición limitada',
+        'Envío inmediato',
+      ];
+    }
+
+    if (/(gorra|cap|accesor|bolso|gafa|reloj|cadena)/.test(name)) {
+      return [
+        'Talla única',
+        'Ajustable',
+        'Unisex',
+        'Importado',
+        'Nuevo',
+        'Envío inmediato',
+      ];
+    }
+
+    if (/(tecno|audio|electro|hogar|audifon|parlant)/.test(name)) {
+      return [
+        'Nuevo en caja',
+        'Garantía',
+        'Original',
+        'Envío inmediato',
+        'Disponible',
+      ];
+    }
+
+    return [
+      'Nuevo',
+      'Unisex',
+      'Importado',
+      'Calidad Premium',
+      'Edición limitada',
+      'Envío inmediato',
+      'Bajo pedido',
+    ];
+  }
+
+  onSingleCategoryChange(catId: number | null): void {
+    if (!this.editingProductoId()) {
+      this.prodForm.codigo = this.generateNextCode(catId);
+    }
+  }
+
+  toggleSingleTag(tag: string): void {
+    const current = this.prodSelectedTags();
+    if (current.includes(tag)) {
+      this.prodSelectedTags.set(current.filter((t) => t !== tag));
+    } else {
+      this.prodSelectedTags.set([...current, tag]);
+    }
+  }
+
+  getCustomSingleTags(): string[] {
+    const recommended = this.getRecommendedTagsForCategory(this.prodForm.categoria_id);
+    return this.prodSelectedTags().filter((t) => !recommended.includes(t));
+  }
+
+  addCustomSingleTag(): void {
+    const clean = this.customTagInput.trim();
+    if (!clean) return;
+    if (!this.prodSelectedTags().includes(clean)) {
+      this.prodSelectedTags.set([...this.prodSelectedTags(), clean]);
+    }
+    this.customTagInput = '';
   }
 
   // ==========================================================================
@@ -1114,15 +1374,16 @@ export class AdminComponent implements OnInit {
   }
 
   // ==========================================================================
-  // PRODUCTOS CRUD
+  // PRODUCTOS CRUD (SINGLE)
   // ==========================================================================
   getEmptyProductoForm(): Partial<Producto> {
+    const defaultCat = this.filterCategoriaId() ?? this.categorias()[0]?.id ?? null;
     return {
-      categoria_id: this.categorias()[0]?.id ?? null,
-      codigo: '',
+      categoria_id: defaultCat,
+      codigo: this.generateNextCode(defaultCat),
       nombre: '',
       descripcion: '',
-      precio: 0,
+      precio: undefined,
       precio_anterior: null,
       imagen_url: '',
       imagenes: [],
@@ -1134,6 +1395,7 @@ export class AdminComponent implements OnInit {
 
   abrirModalProducto(prod?: Producto): void {
     this.newImageUrlInput = '';
+    this.customTagInput = '';
     if (prod) {
       this.editingProductoId.set(prod.id);
       const imgs: string[] = [];
@@ -1146,25 +1408,52 @@ export class AdminComponent implements OnInit {
         imgs.unshift(prod.imagen_url.trim());
       }
       this.prodImages.set(imgs);
-      this.prodForm = { ...prod, precio_anterior: null, destacado: false };
+
+      const tags = (prod.etiquetas || '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      this.prodSelectedTags.set(tags);
+      this.showOptionalDesc.set(!!prod.descripcion?.trim());
+
+      this.prodForm = {
+        ...prod,
+        codigo: prod.codigo || this.generateNextCode(prod.categoria_id),
+        precio_anterior: null,
+        destacado: false,
+      };
     } else {
       this.editingProductoId.set(null);
       this.prodImages.set([]);
+      this.prodSelectedTags.set([]);
+      this.showOptionalDesc.set(false);
       this.prodForm = this.getEmptyProductoForm();
     }
     this.showProductoModal.set(true);
   }
 
   guardarProducto(): void {
-    if (!this.prodForm.nombre) return;
+    if (!this.prodForm.nombre?.trim()) return;
     if (this.newImageUrlInput.trim()) {
       this.agregarImagenesDesdeInput();
     }
+    if (this.customTagInput.trim()) {
+      this.addCustomSingleTag();
+    }
+
     this.saving.set(true);
 
     const imgs = this.prodImages();
+    const codigoFinal =
+      this.prodForm.codigo?.trim() || this.generateNextCode(this.prodForm.categoria_id);
+
     const payload: Partial<Producto> = {
       ...this.prodForm,
+      nombre: this.prodForm.nombre.trim(),
+      codigo: codigoFinal,
+      precio: Number(this.prodForm.precio || 0),
+      descripcion: this.showOptionalDesc() ? (this.prodForm.descripcion || '').trim() : '',
+      etiquetas: this.prodSelectedTags().join(', '),
       imagen_url: imgs[0] || '',
       imagenes: imgs,
       precio_anterior: null,
@@ -1180,7 +1469,9 @@ export class AdminComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.showProductoModal.set(false);
-        this.mostrarToast(id ? 'Producto actualizado correctamente' : 'Producto creado en el catálogo');
+        this.mostrarToast(
+          id ? 'Producto actualizado' : `Producto creado (${codigoFinal})`
+        );
         this.cargarDatos();
       },
       error: (err) => {
@@ -1191,7 +1482,12 @@ export class AdminComponent implements OnInit {
   }
 
   toggleDisponible(prod: Producto): void {
-    const actualizado = { ...prod, disponible: !prod.disponible, precio_anterior: null, destacado: false };
+    const actualizado = {
+      ...prod,
+      disponible: !prod.disponible,
+      precio_anterior: null,
+      destacado: false,
+    };
     this.catalogService.actualizarProducto(prod.id, actualizado).subscribe({
       next: () => this.cargarDatos(),
     });
@@ -1208,24 +1504,25 @@ export class AdminComponent implements OnInit {
   }
 
   // ==========================================================================
-  // SUBIDA MASIVA POR CATEGORÍA
+  // SUBIDA MASIVA DINÁMICA POR CATEGORÍA
   // ==========================================================================
   private createEmptyBulkRow(): BulkRowDraft {
     return {
       nombre: '',
       precio: this.bulkDefaultPrice,
-      codigo: '',
-      etiquetas: this.bulkDefaultTags,
-      descripcion: '',
+      tags: [...this.bulkDefaultTags()],
       imagenesText: '',
     };
   }
 
   abrirModalMasivo(): void {
-    this.bulkMode.set('table');
-    this.bulkCategoriaId.set(this.filterCategoriaId() ?? this.categorias()[0]?.id ?? null);
+    const defaultCat = this.filterCategoriaId() ?? this.categorias()[0]?.id ?? null;
+    this.bulkCategoriaId.set(defaultCat);
+    this.bulkMode.set('links');
     this.bulkDefaultPrice = null;
-    this.bulkDefaultTags = '';
+    this.bulkDefaultTags.set([]);
+    this.bulkNamePrefix = '';
+    this.bulkRawLinksText = '';
     this.bulkCsvText = '';
     this.bulkRows = [
       this.createEmptyBulkRow(),
@@ -1233,6 +1530,34 @@ export class AdminComponent implements OnInit {
       this.createEmptyBulkRow(),
     ];
     this.showBulkModal.set(true);
+  }
+
+  onBulkCategoryChange(catId: number | null): void {
+    this.bulkCategoriaId.set(catId);
+    // Limpia etiquetas por defecto que ya no pertenecen a la nueva categoría
+    const allowed = this.getRecommendedTagsForCategory(catId);
+    this.bulkDefaultTags.set(this.bulkDefaultTags().filter((t) => allowed.includes(t)));
+  }
+
+  toggleBulkDefaultTag(tag: string): void {
+    const current = this.bulkDefaultTags();
+    if (current.includes(tag)) {
+      this.bulkDefaultTags.set(current.filter((t) => t !== tag));
+    } else {
+      this.bulkDefaultTags.set([...current, tag]);
+    }
+  }
+
+  toggleRowTag(row: BulkRowDraft, tag: string): void {
+    if (row.tags.includes(tag)) {
+      row.tags = row.tags.filter((t) => t !== tag);
+    } else {
+      row.tags = [...row.tags, tag];
+    }
+  }
+
+  getPreviewBulkCode(index: number): string {
+    return this.generateNextCode(this.bulkCategoriaId(), index);
   }
 
   agregarFilasMasivas(count: number): void {
@@ -1244,7 +1569,10 @@ export class AdminComponent implements OnInit {
   duplicarFilaMasiva(index: number): void {
     const row = this.bulkRows[index];
     if (!row) return;
-    this.bulkRows.splice(index + 1, 0, { ...row, codigo: '' });
+    this.bulkRows.splice(index + 1, 0, {
+      ...row,
+      tags: [...row.tags],
+    });
   }
 
   eliminarFilaMasiva(index: number): void {
@@ -1253,21 +1581,63 @@ export class AdminComponent implements OnInit {
   }
 
   aplicarDefaultsMasivo(): void {
+    const tagsCopy = [...this.bulkDefaultTags()];
     this.bulkRows.forEach((row) => {
       if (this.bulkDefaultPrice !== null && this.bulkDefaultPrice >= 0) {
         row.precio = this.bulkDefaultPrice;
       }
-      if (this.bulkDefaultTags.trim()) {
-        row.etiquetas = this.bulkDefaultTags.trim();
+      if (tagsCopy.length > 0) {
+        row.tags = Array.from(new Set([...row.tags, ...tagsCopy]));
       }
     });
   }
 
+  // Modo A: Pegar links masivos (1 línea = 1 producto; varios links en una línea con coma o | = múltiples fotos)
+  private parseBulkLinkLines(): string[][] {
+    return this.bulkRawLinksText
+      .split(/\r?\n/)
+      .map((line) =>
+        line
+          .split(/[,|]+/)
+          .map((u) => u.trim())
+          .filter((u) => u.startsWith('http://') || u.startsWith('https://'))
+      )
+      .filter((group) => group.length > 0);
+  }
+
+  countBulkLinkGroups(): number {
+    return this.parseBulkLinkLines().length;
+  }
+
+  generarTarjetasDesdeLinks(): void {
+    const groups = this.parseBulkLinkLines();
+    if (groups.length === 0) return;
+
+    const baseName =
+      this.bulkNamePrefix.trim() ||
+      this.getSelectedBulkCategoryName() ||
+      'Producto';
+
+    const startSeq = this.getNextSequenceForPrefix(
+      this.getCategoryPrefix(this.bulkCategoriaId())
+    );
+
+    this.bulkRows = groups.map((urls, idx) => ({
+      nombre: `${baseName} #${startSeq + idx}`,
+      precio: this.bulkDefaultPrice,
+      tags: [...this.bulkDefaultTags()],
+      imagenesText: urls.join('\n'),
+    }));
+
+    this.bulkMode.set('table');
+  }
+
+  // Modo C: Excel / CSV simplificado
   cargarEjemploCsv(): void {
     this.bulkCsvText = [
-      'nombre, precio, codigo, etiquetas, descripcion, imagenes',
-      'Tenis Street Black, 185000, ZAP-001, Tallas 38-43, Cuero sintético negro con suela gruesa, https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800 | https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800',
-      'Tenis Urban White, 175000, ZAP-002, Tallas 37-42, Diseño limpio totalmente blanco, https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800',
+      'nombre, precio, etiquetas, imagenes',
+      'Tenis Street Black, 185000, Tallas 38-43 | Importado, https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800 | https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800',
+      'Tenis Urban White, 175000, Tallas 37-42, https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800',
     ].join('\n');
   }
 
@@ -1298,22 +1668,24 @@ export class AdminComponent implements OnInit {
       const delimiter = line.includes('\t') ? '\t' : line.includes(';') ? ';' : ',';
       const cols = line.split(delimiter).map((c) => c.trim().replace(/^"|"$/g, ''));
 
-      // Ignora encabezado si la primera línea dice "nombre"
       if (idx === 0 && cols[0]?.toLowerCase() === 'nombre') return;
 
       const nombre = cols[0] || '';
       const rawPrice = (cols[1] || '').replace(/[^\d.]/g, '');
-      const precio = rawPrice ? Number(rawPrice) : null;
+      const precio = rawPrice ? Number(rawPrice) : this.bulkDefaultPrice;
 
       if (!nombre || precio === null || Number.isNaN(precio)) return;
+
+      const rowTags = (cols[2] || '')
+        .split(/[|;]+/)
+        .map((t) => t.trim())
+        .filter(Boolean);
 
       drafts.push({
         nombre,
         precio,
-        codigo: cols[2] || '',
-        etiquetas: cols[3] || '',
-        descripcion: cols[4] || '',
-        imagenesText: cols.slice(5).join(' | '),
+        tags: rowTags.length > 0 ? rowTags : [...this.bulkDefaultTags()],
+        imagenesText: cols.slice(3).join(' | '),
       });
     });
 
@@ -1328,7 +1700,24 @@ export class AdminComponent implements OnInit {
   }
 
   private getBulkDraftsSource(): BulkRowDraft[] {
-    return this.bulkMode() === 'csv' ? this.parseCsvToDrafts() : this.bulkRows;
+    if (this.bulkMode() === 'csv') return this.parseCsvToDrafts();
+    if (this.bulkMode() === 'links') {
+      const groups = this.parseBulkLinkLines();
+      const baseName =
+        this.bulkNamePrefix.trim() ||
+        this.getSelectedBulkCategoryName() ||
+        'Producto';
+      const startSeq = this.getNextSequenceForPrefix(
+        this.getCategoryPrefix(this.bulkCategoriaId())
+      );
+      return groups.map((urls, idx) => ({
+        nombre: `${baseName} #${startSeq + idx}`,
+        precio: this.bulkDefaultPrice,
+        tags: [...this.bulkDefaultTags()],
+        imagenesText: urls.join('\n'),
+      }));
+    }
+    return this.bulkRows;
   }
 
   getValidBulkProductsCount(): number {
@@ -1354,17 +1743,20 @@ export class AdminComponent implements OnInit {
       (r) => r.nombre.trim().length > 0 && r.precio !== null && Number(r.precio) >= 0
     );
 
-    if (validRows.length === 0) return;
+    if (validRows.length === 0) {
+      alert('Asegúrate de tener nombre y precio en los productos antes de subir.');
+      return;
+    }
 
-    const productosPayload: Partial<Producto>[] = validRows.map((r) => {
+    const productosPayload: Partial<Producto>[] = validRows.map((r, idx) => {
       const imgs = this.parseImagesList(r.imagenesText);
       return {
         categoria_id: catId,
+        codigo: this.generateNextCode(catId, idx),
         nombre: r.nombre.trim(),
         precio: Number(r.precio),
-        codigo: r.codigo.trim(),
-        etiquetas: r.etiquetas.trim(),
-        descripcion: r.descripcion.trim(),
+        etiquetas: r.tags.join(', '),
+        descripcion: '',
         imagen_url: imgs[0] || '',
         imagenes: imgs,
         precio_anterior: null,
@@ -1383,7 +1775,9 @@ export class AdminComponent implements OnInit {
         next: (res) => {
           this.saving.set(false);
           this.showBulkModal.set(false);
-          this.mostrarToast(`Se subieron ${res.creados} productos en ${this.getSelectedBulkCategoryName() || 'la categoría'}`);
+          this.mostrarToast(
+            `Se subieron ${res.creados} productos en ${this.getSelectedBulkCategoryName() || 'la categoría'}`
+          );
           this.cargarDatos();
         },
         error: (err) => {

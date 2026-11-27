@@ -783,8 +783,8 @@ import { environment } from '../../../environments/environment';
                   </span>
                 </div>
 
-                <p class="text-xs sm:text-sm text-zinc-300 mt-4 leading-relaxed">
-                  {{ prod.descripcion || 'Producto disponible en nuestro catálogo oficial.' }}
+                <p *ngIf="prod.descripcion" class="text-xs sm:text-sm text-zinc-300 mt-4 leading-relaxed">
+                  {{ prod.descripcion }}
                 </p>
 
                 <div *ngIf="getTagsList(prod.etiquetas).length > 0" class="flex flex-wrap gap-1.5 mt-4">
